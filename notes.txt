@@ -1,0 +1,854 @@
+{% extends "employee_portal/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}
+My Dashboard
+{% endblock %}
+
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+ 
+
+
+    <!-- top navbar 2 -->
+  <nav class="navbar navbar-expand-lg top-navbar-2">
+  <div class="container-fluid">
+    <ul class="navbar-nav">
+
+
+    </ul>
+  </div>
+</nav>
+
+
+
+  <div class="myspace-overview-contents">
+
+
+  <div class="position-relative">
+    <img src="{% static 'images/nature.jpg' %}" class="img-fluid w-100" style="height: 220px; object-fit: cover;width: 70%;margin-left: 54px;" alt="Nature">
+  </div>
+
+<div class="bg-white border-0">
+  <div class="container-fluid w-100">
+    <div class="row ms-4">
+      <div class="col-3 card_col">
+      <div class="card text-center shadow-sm card_1" style="width: 18rem; height: 250px; margin-top: -80px;">
+        <div class="card-body">
+          
+          <img class="rounded employee-img" 
+           src="{% if employee.photo %}{{ employee.photo.url }}{% else %}{% static 'images/user.avif' %}{% endif %}" 
+           alt="Profile"
+           style="width: 110px; height: 110px; object-fit: cover; position: absolute; top: -70px; left: 50%; transform: translateX(-50%); border: 3px solid white;">
+
+          <h5 class="card-title mb-1 mt-5 fw-bold">{% if employee %}{{ employee.first_name }} {{ employee.last_name }}{% else %}No Name{% endif %}</h5>
+          <p class="text-muted mb-2">{{ employee.title  }}</p>
+          <p class="text-danger mb-1" id="status">Checked-Out</p>
+<h6 class="fw-semibold my-2" id="timer">00 : 00 : 00</h6>
+<button id="check-btn" class="btn btn-success rounded-pill px-4">Check-in</button>
+        </div>
+        </div> 
+      </div>
+  
+      <div class="col-9">
+         <div class="card text-center shadow-sm " style=" height: 500px; margin-top: -80px;">
+          <div class="card-title">
+            <h5 class="text-start ps-3 pt-3">Weekly Work Summary ({{ start_of_week }} - {{ end_of_week }})</h5>
+            
+          </div>
+
+
+
+ <div class="card shadow-sm border-0">
+  <div class="card-body">
+  
+    </div>
+
+    <div class="bg-light p-3 rounded-3">
+      <div class="mb-3">
+        <span class="fw-semibold  d-block text-start">General</span>
+        <small class="text-muted d-block text-start">9:30 AM - 6:30 PM</small>
+      </div>
+
+      <div class="d-flex justify-content-between text-center border-top pt-3">
+  {% for att in weekly_summary %}
+    <div class="flex-fill">
+      <div class="fw-semibold text-secondary">{{ att.date|date:"D" }}</div>
+      <div class="fw-bold">{{ att.date|date:"d" }}</div>
+
+      {% if att.is_weekend %}
+        <small class="text-warning fw-semibold">Weekend</small>
+      {% elif att.worked == "Absent" %}
+        <small class="text-danger fw-semibold">Absent</small>
+      {% elif att.worked == "00:00:00" or not att.worked %}
+        <small class="text-danger fw-semibold">Absent</small>
+      {% else %}
+        <small class="text-success fw-semibold">{{ att.worked }}</small>
+      {% endif %}
+    </div>
+  {% empty %}
+    <div class="flex-fill text-muted">No records</div>
+  {% endfor %}
+</div>
+
+</div>
+
+    </div> 
+  </div>
+  </div> 
+  
+
+  
+</div>
+
+  
+
+</div>
+{% comment %} ------------------------------------------------------------------------------------------- {% endcomment %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const checkBtn = document.getElementById("check-btn");
+    const timerDisplay = document.getElementById("timer");
+    const statusDisplay = document.getElementById("status");
+    
+
+    let timerInterval;
+    let duration = 0;
+    let checkedIn = false;
+    let lastActiveTime = Date.now();
+
+
+    function updateTimerDisplay() {
+        let hrs = Math.floor(duration / 3600);
+        let mins = Math.floor((duration % 3600) / 60);
+        let secs = duration % 60;
+        timerDisplay.textContent = `${String(hrs).padStart(2,'0')} : ${String(mins).padStart(2,'0')} : ${String(secs).padStart(2,'0')}`;
+    }
+
+ 
+
+//start timer---------------------------------------------------
+function startTimer() {
+    if (!timerInterval) {
+        timerInterval = setInterval(() => {
+            duration++;
+            updateTimerDisplay();
+       
+
+          
+         
+            if (duration >= 28800) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                duration = 28800;
+                updateTimerDisplay();
+             
+                checkBtn.textContent = "Check-in";
+             
+                checkBtn.classList.remove("btn-danger");
+                checkBtn.classList.add("btn-success");
+
+                
+
+                fetch("{% url 'toggle_check' %}", {
+                    method: "POST",
+                    headers: {"X-CSRFToken": "{{ csrf_token }}"},
+                    body: new URLSearchParams({
+                        "action": "pause",
+                        "duration": duration
+                    })
+                });
+
+                return;
+            }
+
+        }, 1000);
+    }
+}
+
+//pause timer function
+    function pauseTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+
+            const url = "{% url 'toggle_check' %}";
+            const data = new URLSearchParams();
+            data.append("action", "pause");
+            data.append("duration", duration);
+            data.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+            navigator.sendBeacon(url, data);
+        }
+    }
+
+    
+  // attendance 
+fetch("{% url 'toggle_check' %}")
+    .then(res => res.json())
+    .then(data => {
+        duration = data.duration_seconds || 0;
+        
+
+        // 8 hours already completed condition
+        if (data.eight_hours_completed) {
+            duration = 28800;
+            updateTimerDisplay();
+            clearInterval(timerInterval);
+            timerInterval = null;
+            checkedIn = false;
+            checkBtn.textContent = "Check-in";
+            checkBtn.disabled = true;
+            checkBtn.classList.remove("btn-danger");
+            checkBtn.classList.add("btn-success");
+            statusDisplay.innerHTML = "<span class='text-success fw-bold'>Your working hours has completed for today!</span>";
+            return; 
+        }
+
+        //  If user is checked-in currently
+        if (data.check_in && !data.check_out) {
+            checkedIn = true;
+            statusDisplay.textContent = "Checked-in";
+            statusDisplay.classList.remove("text-danger");
+            statusDisplay.classList.add("text-success");
+            checkBtn.textContent = "Check-out";
+            checkBtn.classList.remove("btn-success");
+            checkBtn.classList.add("btn-danger");
+            startTimer();
+        } 
+        // If user has checked-out already
+        else if (data.check_out) {
+            checkedIn = false;
+            statusDisplay.textContent = "Checked-out";
+            statusDisplay.classList.remove("text-success");
+            statusDisplay.classList.add("text-danger");
+            checkBtn.textContent = "Check-in";
+            checkBtn.classList.remove("btn-danger");
+            checkBtn.classList.add("btn-success");
+        } 
+        // If user never checked in today
+        else {
+            checkedIn = false;
+            statusDisplay.textContent = "Checked-out";
+            statusDisplay.classList.remove("text-success");
+            statusDisplay.classList.add("text-danger");
+            checkBtn.textContent = "Check-in";
+            checkBtn.disabled = false;
+        }
+
+        updateTimerDisplay();
+    });
+
+    checkBtn.addEventListener("click", function() {
+          const screenWidth = window.innerWidth;
+
+ 
+    if (screenWidth < 1000) {
+        alert("Check-in is allowed only on laptop screens!");
+        return;
+    }
+
+    
+
+        const action = checkedIn ? "checkout" : "checkin";
+
+        fetch("{% url 'toggle_check' %}", {
+            method: "POST",
+            headers: {"X-CSRFToken": "{{ csrf_token }}"},
+            body: new URLSearchParams({"action": action, "duration": duration})
+        })
+        .then(res => res.json())
+        .then(data => {
+            duration = data.duration_seconds;
+
+            if (data.status === "eight_hours_completed") {
+              checkedIn = false;
+              clearInterval(timerInterval);
+              timerInterval = null;
+              duration = 28800;
+              updateTimerDisplay(); 
+              checkBtn.textContent = "Check-in";
+              checkBtn.disabled = true;
+              checkBtn.classList.remove("btn-danger");
+              checkBtn.classList.add("btn-success");
+              statusDisplay.innerHTML = "<span class='text-success fw-bold'>Your working hours has completed for today!!</span>";
+            return; 
+}
+
+
+            if (action === "checkin") {
+                checkedIn = true;
+                statusDisplay.textContent = "Checked-in";
+                 statusDisplay.classList.remove("text-danger");
+    statusDisplay.classList.add("text-success");
+                checkBtn.textContent = "Check-out";
+                checkBtn.classList.remove("btn-success");
+                checkBtn.classList.add("btn-danger");
+                startTimer();
+            } else if (action === "checkout") {
+                checkedIn = false;
+                pauseTimer();
+                statusDisplay.textContent = "Checked-out";
+                 statusDisplay.classList.remove("text-success");
+    statusDisplay.classList.add("text-danger");
+                checkBtn.textContent = "Check-in";
+                checkBtn.classList.remove("btn-danger");
+                checkBtn.classList.add("btn-success");
+                updateTimerDisplay();
+            }
+        });
+    });
+
+
+
+// Detect time 
+/*let lastActive = Date.now();
+let wasSleeping = false;
+
+setInterval(() => {
+  const now = Date.now();
+  const diff = now - lastActive;
+
+ 
+  if (diff > 3000 && checkedIn && !wasSleeping) {
+    console.log(" System sleep detected — pausing timer...");
+    pauseTimer();
+    wasSleeping = true;
+  }
+
+  //  If system wakes and timing is normal again → resume
+  if (wasSleeping && diff <= 1500 && checkedIn) {
+    console.log("System wake detected — resuming timer...");
+    startTimer();
+    wasSleeping = false;
+  }
+
+  lastActive = now;
+}, 1000); 
+*/
+// Detect system sleep/wake only — works on Windows + Mac
+let lastCheck = performance.now();
+let wasSleeping = false;
+
+setInterval(() => {
+    const now = performance.now();
+    const diff = now - lastCheck;
+
+    
+    if (diff > 3000 && checkedIn && !wasSleeping) {
+        console.log(" System sleep detected — pausing timer...");
+        pauseTimer();
+        wasSleeping = true;
+    }
+
+    if (wasSleeping && diff <= 1500 && checkedIn) {
+        console.log(" System wake detected — resuming timer...");
+        startTimer();
+        wasSleeping = false;
+    }
+
+    lastCheck = now;
+}, 1000);
+
+
+    // Pause timer on tab close
+    window.addEventListener("beforeunload", pauseTimer);
+});
+
+</script>
+
+
+</div>   <!------------final div-->
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------------script block---------------------------------------
+{% comment %} ------------------------------------------------------------------------------------------- {% endcomment %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const checkBtn = document.getElementById("check-btn");
+    const timerDisplay = document.getElementById("timer");
+    const statusDisplay = document.getElementById("status");
+
+    let timerInterval = null;
+    let duration = 0;
+    let checkedIn = false;
+
+    //==================== TIMER DISPLAY ====================
+    function updateTimerDisplay() {
+        let hrs = Math.floor(duration / 3600);
+        let mins = Math.floor((duration % 3600) / 60);
+        let secs = duration % 60;
+        timerDisplay.textContent =
+            `${String(hrs).padStart(2, '0')} : ` +
+            `${String(mins).padStart(2, '0')} : ` +
+            `${String(secs).padStart(2, '0')}`;
+    }
+
+    //==================== START TIMER ====================
+    function startTimer() {
+        if (!timerInterval) {
+            timerInterval = setInterval(() => {
+                duration++;
+
+                // 8 hours completed = STOP
+                if (duration >= 28800) {
+                    duration = 28800;
+
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+
+                    updateTimerDisplay();
+                    checkBtn.textContent = "Check-in";
+                    checkBtn.disabled = true;
+                    checkBtn.classList.remove("btn-danger");
+                    checkBtn.classList.add("btn-success");
+
+                    statusDisplay.innerHTML =
+                        "<span class='text-success fw-bold'>Your working hours has completed for today!</span>";
+
+                    // send pause/complete to backend
+                    fetch("{% url 'toggle_check' %}", {
+                        method: "POST",
+                        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+                        body: new URLSearchParams({
+                            "action": "pause",
+                            "duration": duration
+                        })
+                    });
+
+                    return;
+                }
+
+                updateTimerDisplay();
+            }, 1000);
+        }
+    }
+
+    //==================== PAUSE TIMER (Only on Checkout) ====================
+    function pauseTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        const url = "{% url 'toggle_check' %}";
+        const data = new URLSearchParams();
+        data.append("action", "pause");
+        data.append("duration", duration);
+        data.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+
+        navigator.sendBeacon(url, data);
+    }
+
+    //==================== INITIAL FETCH ====================
+    fetch("{% url 'toggle_check' %}")
+        .then(res => res.json())
+        .then(data => {
+            duration = data.duration_seconds || 0;
+
+            //--- Case: 8 hours already completed ---
+            if (data.eight_hours_completed) {
+                duration = 28800;
+                updateTimerDisplay();
+
+                checkedIn = false;
+                checkBtn.textContent = "Check-in";
+                checkBtn.disabled = true;
+                checkBtn.classList.remove("btn-danger");
+                checkBtn.classList.add("btn-success");
+
+                statusDisplay.innerHTML =
+                    "<span class='text-success fw-bold'>Your working hours has completed for today!</span>";
+
+                return;
+            }
+
+            //--- Case: User Checked-in ---
+            if (data.check_in && !data.check_out) {
+                checkedIn = true;
+
+                statusDisplay.textContent = "Checked-in";
+                statusDisplay.classList.add("text-success");
+                statusDisplay.classList.remove("text-danger");
+
+                checkBtn.textContent = "Check-out";
+                checkBtn.classList.remove("btn-success");
+                checkBtn.classList.add("btn-danger");
+
+                startTimer();
+            }
+
+            //--- Case: User Checked-out ---
+            else if (data.check_out) {
+                checkedIn = false;
+
+                statusDisplay.textContent = "Checked-out";
+                statusDisplay.classList.add("text-danger");
+                statusDisplay.classList.remove("text-success");
+
+                checkBtn.textContent = "Check-in";
+                checkBtn.disabled = false;
+                checkBtn.classList.remove("btn-danger");
+                checkBtn.classList.add("btn-success");
+            }
+
+            updateTimerDisplay();
+        });
+
+    //==================== BUTTON CLICK ====================
+    checkBtn.addEventListener("click", function () {
+
+        // Laptop Check
+        if (window.innerWidth < 1000) {
+            alert("Check-in is allowed only on laptop screens!");
+            return;
+        }
+
+        const action = checkedIn ? "checkout" : "checkin";
+
+        fetch("{% url 'toggle_check' %}", {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+            body: new URLSearchParams({
+                "action": action,
+                "duration": duration
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+
+                //------ Completed 8 hours ------
+                if (data.status === "eight_hours_completed") {
+                    checkedIn = false;
+                    duration = 28800;
+
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+
+                    updateTimerDisplay();
+
+                    checkBtn.textContent = "Check-in";
+                    checkBtn.disabled = true;
+                    checkBtn.classList.remove("btn-danger");
+                    checkBtn.classList.add("btn-success");
+
+                    statusDisplay.innerHTML =
+                        "<span class='text-success fw-bold'>Your working hours has completed for today!!</span>";
+
+                    return;
+                }
+
+                //------ Check-in ------
+                if (action === "checkin") {
+                    checkedIn = true;
+
+                    statusDisplay.textContent = "Checked-in";
+                    statusDisplay.classList.add("text-success");
+                    statusDisplay.classList.remove("text-danger");
+
+                    checkBtn.textContent = "Check-out";
+                    checkBtn.classList.remove("btn-success");
+                    checkBtn.classList.add("btn-danger");
+
+                    startTimer();
+                }
+
+                //------ Check-out ------
+                else if (action === "checkout") {
+                    checkedIn = false;
+
+                    pauseTimer();
+
+                    statusDisplay.textContent = "Checked-out";
+                    statusDisplay.classList.add("text-danger");
+                    statusDisplay.classList.remove("text-success");
+
+                    checkBtn.textContent = "Check-in";
+                    checkBtn.classList.remove("btn-danger");
+                    checkBtn.classList.add("btn-success");
+
+                    updateTimerDisplay();
+                }
+            });
+    });
+});
+
+</script>
+
+
+
+
+
+
+
+
+def toggle_check(request):
+    user = request.user
+    today = timezone.localdate()
+
+    attendance, created = Attendance.objects.get_or_create(
+        user=user,
+        date=today,
+        defaults={"check_in": None, "check_out": None, "duration_seconds": 0},
+    )
+
+    # ------------------ GET REQUEST ------------------
+    if request.method == "GET":
+        # 8 hours completed
+        if attendance.duration_seconds >= 28800:
+            return JsonResponse(
+                {
+                    "eight_hours_completed": True,
+                    "duration_seconds": attendance.duration_seconds,
+                    "check_in": attendance.check_in,
+                    "check_out": attendance.check_out,
+                }
+            )
+
+        return JsonResponse(
+            {
+                "eight_hours_completed": False,
+                "duration_seconds": attendance.duration_seconds,
+                "check_in": attendance.check_in,
+                "check_out": attendance.check_out,
+            }
+        )
+
+    # ------------------ POST REQUEST ------------------
+    if request.method == "POST":
+        action = request.POST.get("action")
+        duration = int(request.POST.get("duration", 0))
+
+        # ======== CASE 1: Check-in =========
+        if action == "checkin":
+            attendance.check_in = timezone.now()
+            attendance.check_out = None
+            attendance.duration_seconds = duration
+            attendance.save()
+
+            return JsonResponse(
+                {
+                    "status": "checked_in",
+                    "duration_seconds": attendance.duration_seconds,
+                }
+            )
+
+        # ======== CASE 2: Check-out =========
+        if action == "checkout":
+            attendance.check_out = timezone.now()
+            attendance.duration_seconds = duration
+            attendance.save()
+
+            # 8 hours completed?
+            if attendance.duration_seconds >= 28800:
+                attendance.duration_seconds = 28800
+                attendance.save()
+                return JsonResponse(
+                    {"status": "eight_hours_completed", "duration_seconds": 28800}
+                )
+
+            return JsonResponse(
+                {
+                    "status": "checked_out",
+                    "duration_seconds": attendance.duration_seconds,
+                }
+            )
+
+        # ======== CASE 3: Pause/update (timer running) =========
+        if action == "pause":
+            attendance.duration_seconds = duration
+            attendance.save()
+            return JsonResponse(
+                {"status": "paused", "duration_seconds": attendance.duration_seconds}
+            )
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
+
+---------------final toggle corrected--------------------------
+@login_required
+def dashboard(request):
+    try:
+        employee = Employee.objects.get(user=request.user)
+    except Employee.DoesNotExist:
+        employee = None
+
+    today = timezone.localdate()
+    attendance, created = None, None
+    if employee:
+        try:
+            attendance, created = Attendance.objects.get_or_create(
+                user=request.user, date=today
+            )
+        except Attendance.MultipleObjectsReturned:
+            # pick first one & delete others
+            duplicates = Attendance.objects.filter(user=request.user, date=today)
+            attendance = duplicates.first()
+            duplicates.exclude(id=attendance.id).delete()
+
+    start_of_week = today - timedelta(
+        days=today.weekday() + 1 if today.weekday() < 6 else 0
+    )  # Sunday
+    end_of_week = start_of_week + timedelta(days=6)  # Saturday
+
+    weekly_summary = []
+    for i in range(7):
+        day = start_of_week + timedelta(days=i)
+        att = Attendance.objects.filter(user=request.user, date=day).first()
+        weekday = day.weekday()
+        if weekday == 5 or weekday == 6:
+            worked = "Weekend"
+        elif att and att.duration_seconds:
+            hrs = att.duration_seconds // 3600
+            mins = (att.duration_seconds % 3600) // 60
+            worked = f"{hrs}h {mins}m"
+        else:
+            worked = "-"
+        if att and att.duration_seconds:
+            hrs = att.duration_seconds // 3600
+            mins = (att.duration_seconds % 3600) // 60
+            worked = f"{hrs}h {mins}m"
+        else:
+            worked = "-"
+        weekly_summary.append({"date": day, "worked": worked})
+
+    context = {
+        "employee": employee,
+        "attendance": attendance,
+        "weekly_summary": weekly_summary,
+        "today": today,
+        "start_of_week": start_of_week,
+        "end_of_week": end_of_week,
+    }
+    return render(request, "employee_portal/dashboard.html", context)           def toggle_check(request):
+    user = request.user
+    today = timezone.localdate()
+
+    attendance, created = Attendance.objects.get_or_create(
+        user=user,
+        date=today,
+        defaults={
+            "check_in": None,
+            "check_out": None,
+            "duration_seconds": 0,
+            "start_time": None,
+            "is_running": False,
+        },
+    )
+
+    # --------------- GET ----------------
+    if request.method == "GET":
+        total = attendance.duration_seconds or 0
+
+        # If session is running, use start_time (datetime) to compute elapsed
+        if attendance.start_time and not attendance.check_out:
+            elapsed = (timezone.now() - attendance.start_time).total_seconds()
+            total += int(elapsed)
+
+        # clamp to 8 hours
+        if total >= 28800:
+            total = 28800
+
+        return JsonResponse(
+            {
+                "duration_seconds": total,
+                # for backward compat with your frontend:
+                "check_in": (
+                    attendance.start_time.strftime("%H:%M:%S")
+                    if attendance.start_time
+                    else None
+                ),
+                "check_out": (
+                    attendance.check_out.strftime("%H:%M:%S")
+                    if attendance.check_out
+                    else None
+                ),
+                "is_running": bool(attendance.start_time and not attendance.check_out),
+                "eight_hours_completed": total >= 28800,
+            }
+        )
+
+    # --------------- POST ----------------
+    if request.method == "POST":
+        action = request.POST.get("action")
+        try:
+            duration_from_js = int(request.POST.get("duration", 0))
+        except (TypeError, ValueError):
+            duration_from_js = attendance.duration_seconds or 0
+
+        # Always sync DB stored duration from frontend pause/updates
+        attendance.duration_seconds = duration_from_js
+
+        # CHECK-IN: start a new running session (do NOT reset duration_seconds)
+        if action in ("checkin", "check_in"):
+            attendance.start_time = timezone.now()  # store datetime here
+            attendance.check_out = None
+            attendance.is_running = True
+            # optional: store display-only time
+            attendance.check_in = attendance.start_time.time()
+            attendance.save()
+            return JsonResponse(
+                {
+                    "status": "checked_in",
+                    "duration_seconds": attendance.duration_seconds,
+                }
+            )
+
+        # CHECK-OUT: compute elapsed from start_time, add to duration_seconds and stop
+        if action in ("checkout", "check_out"):
+            now = timezone.now()
+            if attendance.start_time:
+                elapsed = (now - attendance.start_time).total_seconds()
+                attendance.duration_seconds = (attendance.duration_seconds or 0) + int(
+                    elapsed
+                )
+
+            # clamp
+            if attendance.duration_seconds >= 28800:
+                attendance.duration_seconds = 28800
+                attendance.eight_hours_completed = True
+
+            attendance.check_out = now.time()
+            attendance.start_time = None
+            attendance.is_running = False
+            attendance.save()
+            status = (
+                "eight_hours_completed"
+                if attendance.eight_hours_completed
+                else "checked_out"
+            )
+            return JsonResponse(
+                {"status": status, "duration_seconds": attendance.duration_seconds}
+            )
+
+        # PAUSE / periodic update: frontend can send duration to persist
+        if action == "pause":
+            # just save duration (do not stop running session)
+            attendance.duration_seconds = duration_from_js
+            attendance.save()
+            return JsonResponse(
+                {"status": "paused", "duration_seconds": attendance.duration_seconds}
+            )
+
+    return JsonResponse({"error": "Invalid request"}, status=400)

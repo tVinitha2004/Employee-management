@@ -1,0 +1,23 @@
+{% extends "employee_portal/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>My Overview</h2>
+  {% if employee %}
+    <div class="card p-3">
+      <p><strong>Name:</strong> {{ employee.first_name }} {{ employee.last_name }}</p>
+      <p><strong>Email:</strong> {{ employee.official_email }}</p>
+      <p><strong>Phone:</strong> {{ employee.phone }}</p>
+      <p><strong>Department:</strong> {{ employee.department }}</p>
+      <p><strong>Title:</strong> {{ employee.title }}</p>
+      <p><strong>Current Salary:</strong> {{ employee.current_salary }}</p>
+      <p><strong>Tentative Joining Date:</strong> {{ employee.tentative_joining_date }}</p>
+      <!-- Add more fields as needed -->
+    </div>
+  {% else %}
+    <p>No employee details found for your account.</p>
+  {% endif %}
+</div>
+{% endblock %}
+

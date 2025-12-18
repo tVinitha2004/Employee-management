@@ -1,0 +1,599 @@
+{% extends "employee_portal/base.html" %}
+{% load static %}
+
+{% block page_title %}
+Onboarding
+{% endblock %}
+
+{% block content %}
+<div class="flex-grow-1" style="background-color: rgb(247, 247, 247); background-color: rgb(212, 215, 215); min-height: 95vh; overflow-y: auto;">
+ 
+<div class="container pt-5 ms-5">
+<div class="d-flex justify-content-between align-items-center mb-3 pt-3">
+  <h2 class="mb-0 ms-5">Employee List</h2>
+ 
+
+  {% if user.is_superuser %}
+  <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
+      Add Candidate
+  </button>
+{% endif %}
+</div>
+  
+  
+ <div class="card p-3 rounded ms-5">
+  <div class="table-responsive" style="max-height:70vh; overflow:auto;">
+    <table class="table table-hover table-bordered">
+      <thead class="table-bordered table-light sticky-top">
+        <tr>
+          <th style="min-width:250px;">First Name</th>
+          <th style="min-width:250px;">Last Name</th>
+          <th style="min-width:250px;">Email ID</th>
+          <th style="min-width:250px;">Department</th>
+          <th style="min-width:250px;">Source of Hire</th>
+          <th style="min-width:250px;">PAN card Number</th>
+          <th style="min-width:250px;">Adhaar Number</th>
+          <th style="min-width:250px;">UAN Number</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for emp in employees %}
+        <tr style="cursor: pointer;" class="employee-row" data-bs-toggle="modal" data-bs-target="#employeeModal{{ emp.id }}">
+          <td>{{ emp.first_name }}</td>
+          <td>{{ emp.last_name }}</td>
+          <td>{{ emp.official_email }}</td>
+          <td>{{ emp.department }}</td>
+          <td>{{ emp.source_of_hire }}</td>
+          <td>**********</td>
+           <td>**********</td>
+            <td>************</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="10" class="text-center py-3">No employees found</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Candidate Modal -->
+<div class="modal fade w-100" id="addCandidateModal" >
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header text-white" style="background-color: #131e40;">
+        <h5 class="modal-title" id="addCandidateModalLabel">Add Candidate</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+
+      </div>
+      <form method="POST" enctype="multipart/form-data" action="{% url 'employee_list' %}">
+        {% csrf_token %}
+        <div class="modal-body modal-body-scrollable">
+          <!-- Candidate Details -->
+          <h6 style="color: #131e40;">Candidate Details</h6>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label>First Name</label>
+              <input type="text" name="first_name" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label>Last Name</label>
+              <input type="text" name="last_name" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label>Official Email</label>
+              <input type="email" name="official_email" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label>Phone</label>
+              <input type="text" name="phone" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label>UAN Number</label>
+              <input type="text" name="uan_number" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label>Aadhaar Number</label>
+              <input type="text" name="aadhaar_number" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label>PAN Number</label>
+              <input type="text" name="pan_number" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label>Photo</label>
+              <input type="file" name="photo" class="form-control">
+            </div>
+          </div>
+
+          <!-- Address Details -->
+          <h6 style="color: #131e40;" class="mt-4">Present Address</h6>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label>Address Line 1</label>
+              <input type="text" name="present_address_line1" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label>Address Line 2</label>
+              <input type="text" name="present_address_line2" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>City</label>
+              <input type="text" name="present_city" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Country</label>
+              <input type="text" name="present_country" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>State</label>
+              <input type="text" name="present_state" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Postal Code</label>
+              <input type="text" name="present_postal_code" class="form-control">
+            </div>
+          </div>
+
+          <h6 style="color: #131e40;" class=" mt-4">Permanent Address</h6>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="sameAsPresent" name="same_as_present">
+            <label class="form-check-label" for="sameAsPresent">Same as Present Address</label>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label>Address Line 1</label>
+              <input type="text" name="permanent_address_line1" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label>Address Line 2</label>
+              <input type="text" name="permanent_address_line2" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>City</label>
+              <input type="text" name="permanent_city" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Country</label>
+              <input type="text" name="permanent_country" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>State</label>
+              <input type="text" name="permanent_state" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Postal Code</label>
+              <input type="text" name="permanent_postal_code" class="form-control">
+            </div>
+          </div>
+          <!-- Professional Details -------------------------------->
+          <h6 style="color: #131e40;" class="mt-4">Professional Details</h6>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label>Experience (Years)</label>
+              <input type="text" name="experience" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Source of Hire</label>
+              <input type="text" name="source_of_hire" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Skill Set</label>
+              <input type="text" name="skill_set" class="form-control" >
+            </div>
+            <div class="col-md-4">
+              <label>Highest Qualification</label>
+              <input type="text" name="highest_qualification" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Additional Info</label>
+              <input type="text" name="additional_information" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Location</label>
+              <input type="text" name="location" class="form-control">
+            </div>
+            <div class="col-md-4">
+             <div class="mb-3 d-flex flex-column">
+  <label class="form-label fw-semibold mt-3">Designation</label><br>
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="title" id="ceo" value="CEO">
+    <label class="form-check-label" for="ceo">CEO</label>
+  </div>
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="title" id="admin" value="Administration">
+    <label class="form-check-label" for="admin">Administration</label>
+  </div>
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="title" id="manager" value="Manager">
+    <label class="form-check-label" for="manager">Manager</label>
+  </div>
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="title" id="assistant_manager" value="Assistant Manager">
+    <label class="form-check-label" for="assistant_manager">Assistant Manager</label>
+  </div>
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="title" id="team_member" value="Team Member">
+    <label class="form-check-label" for="team_member">Team Member</label>
+  </div>
+</div>
+
+            </div>
+          </div>
+                  <!-- Salary & Department -->
+          <h6 style="color: #131e40;" class="mt-4">Salary & Department</h6>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label>Current Salary</label>
+              <input type="text" name="current_salary" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Department</label>
+              <input type="text" name="department" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Offer Letter</label>
+              <input type="file" name="offer_letter" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Tentative Joining Date</label>
+              <!-- <input type="date" name="tentative_joining_date" class="form-control" value="{{ emp.tentative_joining_date}}"> -->
+               <input type="date" name="tentative_joining_date" class="form-control">
+
+            </div>
+          </div>
+
+<!-- Education details -->
+<h6 style="color: #131e40;" class="mt-4">Education Details</h6>
+<div class="row mb-3">
+  <div class="col-md-4">
+    <label>College / University Name</label>
+    <input type="text" name="college_name" class="form-control">
+  </div>
+  <div class="col-md-4">
+    <label>Degree</label>
+    <input type="text" name="degree" class="form-control">
+  </div>
+  <div class="col-md-4">
+    <label>Field of Study</label>
+    <input type="text" name="field_of_study" class="form-control">
+  </div>
+  <div class="col-md-4">
+    <label>Year of Completion</label>
+    <input type="text" name="year_of_completion" class="form-control">
+  </div>
+</div>
+
+<!-- work---------------------------------->
+<h6 style="color: #131e40;" class="mt-4">Work Experience</h6>
+<div class="row mb-3">
+  <div class="col-md-4">
+    <label>Occupation</label>
+    <input type="text" name="occupation" class="form-control" value="{{ emp.occupation }}">
+  </div>
+  <div class="col-md-4">
+    <label>Company</label>
+    <input type="text" name="company" class="form-control" value="{{ emp.company }}">
+  </div>
+  <div class="col-md-4">
+    <label>Duration</label>
+    <input type="text" name="duration" class="form-control" value="{{ emp.duration }}">
+  </div>
+  <div class="col-md-8">
+    <label>Summary</label>
+    <textarea name="summary" class="form-control" rows="2">{{ emp.summary }}</textarea>
+  </div>
+  <div class="col-md-4">
+    <label>Currently Work Here</label>
+    <select name="currently_work_here" class="form-select">
+      <option value="">Select</option>
+      <option value="Yes" {% if emp.currently_work_here == 'Yes' %}selected{% endif %}>Yes</option>
+      <option value="No" {% if emp.currently_work_here == 'No' %}selected{% endif %}>No</option>
+    </select>
+  </div>
+</div>
+
+
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-success">Save Candidate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</div>
+
+
+
+<!-- employee profile---------------------------------------------------------------------------------------->
+{% for emp in employees %}
+<div class="modal fade" id="employeeModal{{ emp.id }}" >
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header text-white" style="background-color: #131e40;">
+        <h5 class="modal-title">{{ emp.first_name }} {{ emp.last_name }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{% url 'edit_employee' emp.id %}">
+        {% csrf_token %}
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+          <div class="card shadow-sm bg-light p-3">
+          <div class="row mb-3">
+            <h4 style="color: #131e40;">Candidate details</h4>
+            <div class="col-md-6 mb-4">
+              <label>First Name</label>
+              <input type="text" name="first_name" class="form-control" value="{{ emp.first_name }}">
+            </div>
+            <div class="col-md-6 mb-4">
+              <label>Last Name</label>
+              <input type="text" name="last_name" class="form-control" value="{{ emp.last_name }}">
+            </div>
+            <div class="col-md-6 mb-4">
+              <label>Official Email</label>
+              <input type="email" name="official_email" class="form-control" value="{{ emp.official_email }}">
+            </div>
+            <div class="col-md-6 mb-4">
+              <label>Phone</label>
+              <input type="text" name="phone" class="form-control" value="{{ emp.phone }}">
+            </div>
+            <div class="col-md-4 mb-4">
+              <label>PAN Number</label>
+              <input type="text" name="pan_number" class="form-control" value="{{ emp.pan_number}}">
+            </div>
+            <div class="col-md-4 mb-4">
+              <label>Aadhaar Number</label>
+              <input type="text" name="aadhaar_number" class="form-control" value="{{ emp.aadhaar_number}}">
+            </div>
+            <div class="col-md-4 mb-4">
+              <label>UAN Number</label>
+              <input type="text" name="uan_number" class="form-control" value="{{ emp.uan_number}}" readonly>
+            </div>
+            <hr>
+          <div class="col-md-6 mb-4">
+  <label>Photo</label><br>
+  {% if emp.photo %}
+    <img src="{{ emp.photo.url }}" alt="Employee Photo" class="img-thumbnail mb-2" width="150">
+  {% else %}
+    <p>No photo uploaded</p>
+  {% endif %}
+  <input type="file" name="photo" class="form-control">
+</div>
+<hr>
+
+                      <!-- Address Details -->
+          <h6 style="color: #131e40;" class="mt-4">Present Address</h6>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label>Address Line 1</label>
+              <input type="text" name="present_address_line1" value="{{ emp.present_address_line1}}" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label>Address Line 2</label>
+              <input type="text" name="present_address_line2" value="{{ emp.present_address_line2}}" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>City</label>
+              <input type="text" name="present_city"value="{{ emp.present_city}}" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Country</label>
+              <input type="text" name="present_country"value="{{ emp.present_country}}" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>State</label>
+              <input type="text" name="present_state"value="{{ emp.present_state}}" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label>Postal Code</label>
+              <input type="text" name="present_postal_code"value="{{ emp.present_postal_code}}" class="form-control">
+            </div>
+          </div>
+
+          <!-- permanent address -->
+          <h6 style="color: #131e40;" class="mt-4">Permanent Address</h6>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="sameAsPresent" name="same_as_present">
+            <label class="form-check-label" for="sameAsPresent"value="{{ emp.same_as_present}}">Same as Present Address</label>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label>Address Line 1</label>
+              <input type="text" name="permanent_address_line1" class="form-control" value="{{ emp.permanent_address_line1}}">
+            </div>
+            <div class="col-md-6">
+              <label>Address Line 2</label>
+              <input type="text" name="permanent_address_line2" class="form-control"value="{{ emp.permanent_address_line2}}">
+            </div>
+            <div class="col-md-4">
+              <label>City</label>
+              <input type="text" name="permanent_city" class="form-control"value="{{ emp.permanent_city}}">
+            </div>
+            <div class="col-md-4">
+              <label>Country</label>
+              <input type="text" name="permanent_country" class="form-control"value="{{ emp.permanent_country}}">
+            </div>
+            <div class="col-md-4">
+              <label>State</label>
+              <input type="text" name="permanent_state" class="form-control"value="{{ emp.permanent_state}}">
+            </div>
+            <div class="col-md-4">
+              <label>Postal Code</label>
+              <input type="text" name="permanent_postal_code" class="form-control"value="{{ emp.permanent_postal_code}}">
+            </div>
+          </div>
+
+          <!-- Professional Details -->
+          <h6 style="color: #131e40;" class="mt-4">Professional Details</h6>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label>Experience (Years)</label>
+              <input type="text" name="experience" class="form-control" value="{{ emp.experience}}">
+            </div>
+            <div class="col-md-4">
+              <label>Source of Hire</label>
+              <input type="text" name="source_of_hire" class="form-control" value="{{ emp.source_of_hire}}">
+            </div>
+            <div class="col-md-4">
+              <label>Skill Set</label>
+              <input type="text" name="skill_set" class="form-control" value="{{ emp.skill_set}}">
+            </div>
+            <div class="col-md-4">
+              <label>Highest Qualification</label>
+              <input type="text" name="highest_qualification" class="form-control" value="{{ emp.highest_qualification}}">
+            </div>
+            <div class="col-md-4">
+              <label>Additional Info</label>
+              <input type="text" name="additional_information" class="form-control" value="{{ emp.additional_information}}">
+            </div>
+            <div class="col-md-4">
+              <label>Location</label>
+              <input type="text" name="location" class="form-control" value="{{ emp.location}}">
+            </div>
+            <div class="col-md-4">
+           <div class="mb-3">
+  <label class="form-label fw-semibold">Designation</label><br>
+
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="title" id="ceo" value="CEO"
+           {% if emp.title == "CEO" %}checked{% endif %}>
+    <label class="form-check-label" for="ceo">CEO</label>
+  </div>
+
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="title" id="admin" value="Administration"
+           {% if emp.title == "Administration" %}checked{% endif %}>
+    <label class="form-check-label" for="admin">Administration</label>
+  </div>
+
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="title" id="manager" value="Manager"
+           {% if emp.title == "Manager" %}checked{% endif %}>
+    <label class="form-check-label" for="manager">Manager</label>
+  </div>
+
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="title" id="assistant_manager" value="Assistant Manager"
+           {% if emp.title == "Assistant Manager" %}checked{% endif %}>
+    <label class="form-check-label" for="assistant_manager">Assistant Manager</label>
+  </div>
+
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="radio" name="title" id="team_member" value="Team Member"
+           {% if emp.title == "Team Member" %}checked{% endif %}>
+    <label class="form-check-label" for="team_member">Team Member</label>
+  </div>
+</div>
+
+          </div>
+
+          <!-- Salary & Department -->
+          <h6 style="color: #131e40;" class="mt-4">Salary & Department</h6>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label>Current Salary</label>
+              <input type="text" name="current_salary" class="form-control" value="{{ emp.current_salary}}">
+            </div>
+            <div class="col-md-4">
+              <label>Department</label>
+              <input type="text" name="department" class="form-control" value="{{ emp.department}}">
+            </div>
+            <div class="col-md-4">
+              <label>Offer Letter</label>
+              <input type="file" name="offer_letter" class="form-control" value="{{ emp.offer_letter}}">
+            </div>
+            <div class="col-md-4">
+              <label>Tentative Joining Date</label>
+              <!-- <input type="date" name="tentative_joining_date" class="form-control" value="{{ emp.tentative_joining_date}}"> -->
+               <input type="date" name="tentative_joining_date" class="form-control" value="{{ emp.tentative_joining_date|date:'Y-m-d' }}">
+
+            </div>
+          </div>
+
+         <!--Education -------->
+<h6 style="color: #131e40;" class="mt-4">Education Details</h6>
+<div class="row mb-3">
+  <div class="col-md-4">
+    <label>College / University Name</label>
+    <input type="text" name="college_name" class="form-control" value="{{ emp.college_name }}">
+  </div>
+  <div class="col-md-4">
+    <label>Degree</label>
+    <input type="text" name="degree" class="form-control" value="{{ emp.degree }}">
+  </div>
+  <div class="col-md-4">
+    <label>Field of Study</label>
+    <input type="text" name="field_of_study" class="form-control" value="{{ emp.field_of_study }}">
+  </div>
+  <div class="col-md-4">
+    <label>Year of Completion</label>
+    <input type="text" name="year_of_completion" class="form-control" value="{{ emp.year_of_completion }}">
+  </div>
+</div>
+
+</div>
+          <!-- Add more fields as needed -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+          <!-- Show Delete button only for superusers -->
+{% if request.user.is_superuser %}
+  <!-- Trigger Delete Confirmation Modal -->
+  <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal{{ emp.id }}">
+    Delete
+  </button>
+
+  <!-- Show Save button only for superusers -->
+  <button type="submit" class="btn btn-success">Save Changes</button>
+{% endif %}
+        </div>
+       
+        </form>
+        
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+
+
+
+      </form>
+      
+    </div>
+  </div>
+</div>
+  <!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal{{ emp.id }}" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete employee <strong>{{ emp.first_name }} {{ emp.last_name }}</strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form method="POST" action="{% url 'delete_employee' emp.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+{% endfor %}
+
+
+
+{% endblock %}

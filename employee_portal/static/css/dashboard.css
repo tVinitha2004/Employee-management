@@ -1,0 +1,204 @@
+/* ===============================
+   GENERAL LAYOUT
+=================================*/
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+/* Employee card */
+.card_col .card_1 {
+    width: 18rem;
+    height: 250px;
+    margin-top: -80px;
+    margin-left: 50px;
+}
+
+.employee-img {
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+    position: absolute;
+    top: -70px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 3px solid white;
+}
+
+/* Table responsiveness */
+.table-responsive {
+    overflow-x: auto;
+}
+
+
+/* Tablets (md < 992px) */
+@media (max-width: 991px) {
+    .content {
+        margin-left: 70px; /* keep sidebar width */
+        padding: 0.5rem;
+    }
+
+    .top-navbar,
+    .top-navbar-2 {
+        left: 70px; /* keep sidebar left */
+    }
+
+    .myspace-overview-contents .position-relative img {
+        width: 90%;
+        margin-left: 5%;
+        height: 180px;
+    }
+
+    .card_col .card_1 {
+        width: 100%;
+        margin-top: -50px;
+        height: auto;
+    }
+
+    .employee-img {
+        width: 90px;
+        height: 90px;
+        top: -50px;
+    }
+
+    .col-9 {
+        margin-top: 20px;
+    }
+
+    #check-btn {
+        width: 100%;
+        padding: 0.4rem;
+    }
+}
+
+/* Mobile (sm < 768px) */
+@media (max-width: 767px) {
+    .content {
+        margin-left: 70px; /* keep sidebar width */
+        padding: 0.5rem;
+    }
+.container-fluid{
+  width: 100%;
+  /* margin-left: 0px; */
+}
+.card_col .card_1 {
+    width: 18rem;
+    height: 250px;
+    margin-top: -80px;
+    margin-left: 5px;
+}
+    .top-navbar,
+    .top-navbar-2 {
+        left: 70px;
+    }
+
+    .myspace-overview-contents .position-relative img {
+        width: 95%;
+        margin-left: 2.5%;
+        height: 150px;
+    }
+
+    .card_col .card_1 {
+        width: 100%;
+        margin-top: -30px;
+        height: auto;
+    }
+
+    .employee-img {
+        width: 80px;
+        height: 80px;
+        top: -40px;
+    }
+
+    .col-9 {
+        margin-top: 15px;
+        width: 100%;
+        margin-top: 100px;
+    }
+
+    #check-btn {
+        width: 100%;
+        padding: 0.35rem;
+        font-size: 0.85rem;
+    }
+
+    /* Weekly summary table smaller font */
+    table.table {
+        font-size: 0.85rem;
+    }
+
+    .myspace-overview-contents {
+        background-position: center top;
+        background-attachment: scroll; /* fix image scrolling issue on mobile */
+    }
+}
+/* ===============================
+   TABLET / IPAD STYLING
+   Devices: 768px to 991px
+=================================*/
+@media (min-width: 768px) and (max-width: 991px) {
+    /* Content adjusts to sidebar */
+    .content {
+        margin-left: 70px; /* sidebar width remains */
+        padding: 1rem;
+    }
+
+    /* Top navbars aligned with sidebar */
+    .top-navbar,
+    .top-navbar-2 {
+        left: 70px;
+        width: calc(100% - 70px);
+    }
+
+    /* Dashboard background image */
+    .myspace-overview-contents .position-relative img {
+        width: 90%;
+        margin-left: 5%;
+        height: 200px;
+    }
+
+    /* Employee card */
+    .card_col .card_1 {
+        width: 100%;
+        margin-top: -60px;
+        height: auto;
+    }
+
+    /* Employee profile image */
+    .employee-img {
+        width: 100px;
+        height: 100px;
+        top: -60px;
+    }
+
+    /* Weekly summary column */
+    .col-9 {
+        margin-top: 100px;
+        margin-right: 10px;
+        width: 100%;
+    }
+
+    /* Timer and check-in button */
+    #timer {
+        font-size: 1rem;
+    }
+
+    #check-btn {
+        width: 100%;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    /* Tables responsive and readable */
+    table.table {
+        font-size: 0.9rem;
+    }
+
+    /* Ensure dashboard background image scrolls smoothly */
+    .myspace-overview-contents {
+        background-position: center top;
+        background-attachment: scroll;
+    }
+}
+

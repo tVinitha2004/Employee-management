@@ -1,0 +1,222 @@
+{% extends "employee_portal/base.html" %}
+{% load static %}
+
+{% block title %}{{ month }} Attendance{% endblock %}
+{% block page_title %}
+Attendance
+{% endblock %}
+
+{% block content %}
+<style>
+    body {
+      background-image: url("{% static 'images/cal3.jpg' %}");
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      
+  }
+    body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(4, 4, 4, 0.5);
+    z-index: -1; 
+  }
+  .day-box {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      min-height: 90px;
+      font-weight: 500;
+      
+  }
+  .bg-present {
+      background-color: #d4edda !important;
+  }
+  .bg-absent {
+      background-color: #f8d7da !important; 
+  }
+  .bg-weekend {
+      background-color: #dfdfdfff !important; 
+  }
+  .today-border {
+      border: 2px solid #007bff !important;
+  }
+  .bg-days{
+      background-color: #e3c5ffff !important;
+  }
+  .bg-warning {
+  background-color: #f5e08aff !important; /* nice bright yellow */
+}
+.tooltip-inner {
+  background-color: #ffcb69 !important; /* golden-yellow */
+  color: #000 !important;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 0 10px rgba(255, 203, 105, 0.6);
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #ffcb69 !important;
+}
+
+  
+
+</style>
+
+<div class="container my-4 ms-auto ps-5 mt-5 pt-2 ">
+  <div class="d-flex justify-content-center align-items-center mb-3 mt-5">
+    <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn">
+      <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#ffffffff">
+        <path d="M400-80 0-480l400-400 61 61.67L122.67-480 461-141.67 400-80Z"/>
+      </svg>
+    </a>
+
+    <h3 class="text-center text-white mb-0">{{ month }}</h3>
+
+    <a href="?year={{ next_year }}&month={{ next_month }}" class="btn">
+      <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#ffffffff">
+        <path d="m309.67-81.33-61-61.67L587-481.33 248.67-819.67l61-61.66 400 400-400 400Z"/>
+      </svg>
+    </a>
+  </div>
+
+
+   
+ <!-- Days Calendar -->
+  <div class="d-grid" style="grid-template-columns: repeat(7, 1fr); gap: 5px;">
+
+    <!-- Weekday headers -->
+    {% for wd in weekdays %}
+      <div class="text-center fw-bold py-2 border bg-light">{{ wd }}</div>
+    {% endfor %}
+
+    <!-- Empty slots for first week -->
+    {% for _ in blank_days %}
+      <div class="border bg-white"></div>
+    {% endfor %}
+
+    <!-- Calendar days -->
+    {% for day in days %}
+    
+    
+      {% comment %} <div class="day-box 
+         {% if day.is_holiday %}
+        bg-warning
+      {% elif day.is_holiday and day.date.weekday == 6 %}
+        bg-weekend
+          {% elif day.date > today %}
+              {% if day.date.weekday == 5 or day.date.weekday == 6 %}
+                 bg-weekend
+                 {% else %}
+                 bg-days
+               {% endif %}
+{% elif day.date.weekday == 5 or day.date.weekday == 6 %}
+    {% if day.status == 'Present' %}
+        bg-present
+    {% else %}
+        bg-weekend
+    {% endif %}
+{% elif day.status == 'Present' %}
+    bg-present
+{% elif day.status == 'Absent' %}
+    bg-absent
+{% else %}
+    bg-white
+{% endif %} "> {% endcomment %}
+
+<div class="day-box 
+    {% if day.date.weekday == 5 or day.date.weekday == 6 %}
+        bg-weekend
+    {% elif day.is_holiday %}
+        bg-warning
+    {% elif day.date > today %}
+        {% if day.date.weekday == 5 or day.date.weekday == 6 %}
+            bg-weekend
+        {% else %}
+            bg-days
+        {% endif %}
+    {% elif day.status == 'Present' %}
+        bg-present
+    {% elif day.status == 'Absent' %}
+        bg-absent
+    {% else %}
+        bg-white
+    {% endif %}
+">
+
+
+      
+{% if day.date > today  %}
+  <div class="d-flex justify-content-center align-items-center fs-5" style="height:100%;">
+    <span class="fw-bold">{{ day.date.day }}</span>
+  </div>
+  
+{% else %}
+  <div class="d-flex justify-content-between align-items-center">
+    <span>{{ day.date.day }}</span>
+    {% if day.is_today %}
+      <span class="text-primary fw-bold">Today</span>
+    {% endif %}
+  </div>
+  
+
+  <div class="mt-auto">
+    {% if day.is_holiday %}
+  <div class="d-flex flex-column justify-content-center align-items-center holiday-tooltip"
+       >
+
+  </div>
+    {% elif day.status == 'Present' %}
+      <span class="text-success small">{{ day.hours|default:"-" }} HRS</span>
+
+    {% elif day.date.weekday == 5 or day.date.weekday == 6 %}
+      {% if day.status == 'Present' %}
+        <span class="text-success small">{{ day.hours|default:"-" }} HRS</span>
+      
+      {% endif %}
+
+    {% elif day.status == 'Absent' and not day.is_holiday %}
+      <span class="text-danger fw-bold mt-1">A</span>
+
+      
+
+{% elif day.status == 'Holiday' %}
+  <div class="d-flex flex-column justify-content-center align-items-center holiday-tooltip"
+       >
+    <span class="fw-bold">{{ day.date.day }}</span>
+    <span class="text-dark small fw-bold">Holiday</span>
+  </div>
+
+    {% endif %}
+  </div>
+{% endif %}
+
+
+      </div>
+    {% endfor %}
+  </div>
+
+{% if total_minutes > 0 or total_hours > 0 %}
+  {% with total_time=total_hours|add:":"|add:total_minutes|stringformat:"02d" %}
+  <div class="text-end text-white mt-3 p-2">
+    <h5>Total working hours of this month:
+      <span style="color: #e4ffffff;">
+        {{ total_hours|stringformat:"02d" }}:{{ total_minutes|stringformat:"02d" }} HRS
+      </span>
+    </h5>
+  </div>
+  {% endwith %}
+{% endif %}
+
+</div>
+
+
+{% endblock %}

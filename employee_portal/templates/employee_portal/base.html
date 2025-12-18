@@ -1,0 +1,354 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}My Dashboard{% endblock %}</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <style>
+    .calendar-grid div {
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  transition: transform 0.2s;
+}
+.calendar-grid div:hover {
+  transform: scale(1.05);
+}
+    .work-schedule {
+  font-family: Arial, sans-serif;
+  width: 100%;
+  max-width: 800px;
+  margin: auto;
+}
+
+.shift {
+  background: #f1f1f1;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+}
+
+.timeline {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  padding: 20px 0;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #ddd;
+  z-index: 0;
+}
+
+.day {
+  text-align: center;
+  z-index: 1;
+  flex: 1;
+  position: relative;
+}
+
+.day .date {
+  font-weight: bold;
+}
+
+.day .status {
+  margin-top: 5px;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.day.current-day {
+  background: #007bff;
+  color: #fff;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+    .modal-body-scrollable {
+    max-height: 70vh; /* 70% of viewport height */
+    overflow-y: auto;
+}
+
+      .myspace-overview-contents {
+        background-image: url("{% static 'images/nature.jpg' %}");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: left center;
+        background-attachment: fixed;
+
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    .sidebar {
+      width: 100px;
+      min-height: 100vh;
+      position: fixed; 
+      top: 0;
+      left: 0;
+      justify-content: center;
+      /* gap: 30px; */
+      font-size: x-small;
+    }
+    .content {
+      /* margin-left: 250px;  */
+      padding: 1rem;
+    }
+    .top-navbar {
+      position: fixed;
+      top: 0;
+      left: 90px;
+      right: 0;
+      z-index: 1030; 
+    }
+        .top-navbar-2 {
+      position: fixed;
+      top: 55px;
+      left: 70px;
+      right: 0;
+      z-index: 1030; 
+    }
+    /* .spacer {
+      height: 90px; 
+    } */
+    .sidebar .nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   
+  justify-content: center; 
+  text-align: center; 
+  font-size: 0.60rem !important;
+position: relative; 
+
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 9999; /* keep it above everything */
+
+}
+
+
+.sidebar .nav-link.active {
+    background-color: #114ab4; 
+    border-radius: 8px; 
+
+}
+
+.navbar .nav-link.active{
+    border-bottom: 3px solid #2daad8;
+}
+
+
+    
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+<nav class="navbar navbar-expand-lg top-navbar fixed-top" id="top-navbar" style="background-color: #182449ff;">
+  <div class="container-fluid">
+    <button class="navbar-toggler ms-5" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon text-white"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+       <ul class="navbar-nav">
+        {% if request.path == '/main/home/' %}
+          <li class="nav-item">
+            <a class="nav-link text-white active" href="{% url 'dashboard' %}">My Dashboard</a>
+          </li>
+        {% elif request.path == '/main/onboarding/candidate/' %}
+          <li class="nav-item">
+            <a class="nav-link text-white active" href="{% url 'employee_list' %}">Onboarding</a>
+          </li>
+          {% elif request.path == '/main/holidays/' %}
+          <li class="nav-item">
+            <a class="nav-link text-white active" href="{% url 'holiday_list' %}">Holidays</a>
+          </li>
+        {% elif request.path == '/main/my-account/' %}
+          <li class="nav-item">
+            <a class="nav-link text-white active" href="{% url 'my_account' %}">My Account</a>
+          </li>
+        {% elif request.path == '/main/attendance-calendar/' %}
+          <li class="nav-item">
+            <a class="nav-link text-white active" href="{% url 'attendance_calendar' %}">Attendance</a>
+          </li>
+   
+        {% endif %}
+      </ul>
+
+
+      <!-- Right side profile icon -->
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link" data-bs-toggle="offcanvas" href="#profileOffcanvas" role="button" aria-controls="profileOffcanvas">
+            {% if emp.photo %}
+              <img src="{{ emp.photo.url }}" class="rounded-circle border border-2 border-light" width="40" height="40" style="object-fit: cover;">
+            {% else %}
+              <img src="{% static 'images/default_user.png' %}" class="rounded-circle border border-2 border-light" width="40" height="40" style="object-fit: cover;">
+            {% endif %}
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Profile Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="profileOffcanvas" aria-labelledby="profileOffcanvasLabel">
+  <div class="offcanvas-header" style="background-color:#2E3B61;">
+    <h5 class="offcanvas-title text-white" id="profileOffcanvasLabel">Profile</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+
+  <div class="offcanvas-body">
+    <div class="d-flex align-items-center mb-3">
+      {% if emp.photo %}
+        <img src="{{ emp.photo.url }}" class="rounded-circle me-3" width="64" height="64" style="object-fit: cover;">
+      {% else %}
+        <img src="{% static 'images/default_user.png' %}" class="rounded-circle me-3" width="64" height="64" style="object-fit: cover;">
+      {% endif %}
+
+      <div>
+        <h6 class="mb-0 fw-semibold">{{ emp.first_name }} {{ emp.last_name }}</h6>
+        <small class="text-muted d-block">User ID: {{ emp.id }}</small>
+        <small class="d-block">{{ emp.official_email }}</small>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+      <a href="{% url 'my_account' %}" class="btn btn-outline-primary rounded-pill px-4">My Account</a>
+      <a href="{% url 'logout' %}" class="text-danger text-decoration-none d-flex align-items-center">
+        <i class="bi bi-box-arrow-right fs-5 me-1"></i> Sign Out
+      </a>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Sidebar -->
+  <div class="sidebar" style="background-color: #131e40;">
+      <img src="{% static 'images/logo.png' %}" class="mb-3 mt-3" alt="logo" style="width: 100px;">
+    <ul class="nav flex-column">
+
+      <li class="nav-item w-100 ">
+        <a class="nav-link text-white pt-3 {% if request.path == '/main/home/' %}active{% endif %}"  href="{% url 'dashboard' %}"id="home-link">
+          <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#FFFFFF"><path d="M226.67-186.67h140v-246.66h226.66v246.66h140v-380L480-756.67l-253.33 190v380ZM160-120v-480l320-240 320 240v480H526.67v-246.67h-93.34V-120H160Zm320-352Z"/></svg>Home</a>
+      </li>
+{% if user.is_superuser  %}
+      <li class="nav-item w-100 ">
+        <a class="nav-link  text-white {% if request.path == '/main/onboarding/candidate/' %}active{% endif %}" href="{% url 'employee_list' %}">
+        <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#FFFFFF"><path d="M475-146.67q4.67 0 10.33-2.33 5.67-2.33 9-5.67l334-334.66Q841-502 847.17-518.11q6.16-16.11 6.16-32.22 0-16.67-6.16-32.84-6.17-16.16-18.84-28.5L651.67-788.33q-12.34-12.67-28.5-18.84-16.17-6.16-32.84-6.16-16.11 0-32.22 6.16Q542-801 529.33-788.33l-15.66 15.66L592.33-693Q606-679 615-660.67q9 18.34 9 39.67 0 39.33-29.17 68.17Q565.67-524 526.33-524q-23.33 0-40.5-7.33-17.16-7.34-30.95-21.23L381-626 202-447q-4.33 4.33-6.17 9.18-1.83 4.86-1.83 10.4 0 11.09 7.67 18.92 7.66 7.83 18.77 7.83 5.56 0 10.56-2.66 5-2.67 8.33-6l137.34-137.34L423.33-500 287-363.33q-4.33 4.33-6.17 9.5-1.83 5.16-1.83 10.5 0 10.66 8 18.66t18.67 8q5.33 0 10.33-2.33t8.33-5.67l137.34-137L508.33-415 372-278.33q-3.67 3.33-5.83 8.89-2.17 5.55-2.17 11.11 0 10.66 8 18.66t18.67 8q5.33 0 9.83-1.83t8.83-6.17l137.34-137L593.33-330 456-192.67q-4.33 4.34-6.17 9.5Q448-178 448-173.33q0 12 7.5 19.33 7.5 7.33 19.5 7.33ZM474.71-80q-34.38 0-61.21-24.5t-31.83-60.91q-34-4.92-57-27.92t-28-57q-34-5-56.5-28.5t-27.5-56.5q-37.34-5-61.34-31t-24-62q0-18 6.99-35.54 6.98-17.53 20.01-30.8L381-721l117 117q6 6.33 13.56 9.83 7.55 3.5 15.11 3.5 11.66 0 21.33-9.5 9.67-9.5 9.67-21.27 0-5.23-2.84-11.56-2.83-6.33-9.16-12.33l-143-143q-12.34-12.67-28.5-18.84-16.17-6.16-32.84-6.16-16.11 0-32.22 6.16Q293-801 280.37-788.43L132-639.67q-12.33 12.34-18 26.67-5.67 14.33-7 31.33t5 33.5q6.33 16.5 16.33 30.17l-48 48q-19-22.33-30-52.17-11-29.83-10.33-60.5.67-29.33 12.33-56.5Q64-666.33 85-687.33L232.67-835q22.66-22.33 51.03-33.33 28.36-11 58.16-11 29.81 0 57.97 11 28.17 11 50.5 33.33L466-819.33 481.67-835q22.66-22.33 51.03-33.33 28.36-11 58.16-11 29.81 0 57.97 11 28.17 11 50.5 33.33L875-659.33q22.33 22.33 33.67 51.02Q920-579.62 920-549.98q0 29.65-11.33 57.81Q897.33-464 875-441.67L541-108q-13.33 13.33-30.52 20.67Q493.29-80 474.71-80Zm-98.38-550.67Z"/></svg>
+        Onboarding</a>
+      </li>
+      <li class="nav-item w-100">
+
+  <a class="nav-link text-white {% if request.path == '/my-account/' %}active{% endif %}" href="{% url 'my_account' %}">
+    <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#FFFFFF"><path d="M234-276q51-39 114-61.5T480-360q69 0 132 22.5T726-276q35-41 54.5-93T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 59 19.5 111t54.5 93Zm246-164q-59 0-99.5-40.5T340-580q0-59 40.5-99.5T480-720q59 0 99.5 40.5T620-580q0 59-40.5 99.5T480-440Zm0 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q53 0 100-15.5t86-44.5q-39-29-86-44.5T480-280q-53 0-100 15.5T294-220q39 29 86 44.5T480-160Zm0-360q26 0 43-17t17-43q0-26-17-43t-43-17q-26 0-43 17t-17 43q0 26 17 43t43 17Zm0-60Zm0 360Z"/></svg>
+    My Account
+  </a>
+{% else %}
+<li class="nav-item w-100">
+
+  <a class="nav-link text-white {% if request.path == '/my-account/' %}active{% endif %}" href="{% url 'my_account' %}">
+    <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#FFFFFF"><path d="M234-276q51-39 114-61.5T480-360q69 0 132 22.5T726-276q35-41 54.5-93T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 59 19.5 111t54.5 93Zm246-164q-59 0-99.5-40.5T340-580q0-59 40.5-99.5T480-720q59 0 99.5 40.5T620-580q0 59-40.5 99.5T480-440Zm0 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q53 0 100-15.5t86-44.5q-39-29-86-44.5T480-280q-53 0-100 15.5T294-220q39 29 86 44.5T480-160Zm0-360q26 0 43-17t17-43q0-26-17-43t-43-17q-26 0-43 17t-17 43q0 26 17 43t43 17Zm0-60Zm0 360Z"/></svg>
+    My Account
+  </a>
+</li>
+{% endif %}
+      <li class="nav-item w-100 ">
+        <a class="nav-link  text-white " href="{% url 'attendance_calendar' %}">
+          <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 0 24 24" width="30px" fill="#FFFFFF"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M18 9l-1.41-1.42L10 14.17l-2.59-2.58L6 13l4 4zm1-6h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-.14 0-.27.01-.4.04-.39.08-.74.28-1.01.55-.18.18-.33.4-.43.64-.1.23-.16.49-.16.77v14c0 .27.06.54.16.78s.25.45.43.64c.27.27.62.47 1.01.55.13.02.26.03.4.03h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7-.25c.41 0 .75.34.75.75s-.34.75-.75.75-.75-.34-.75-.75.34-.75.75-.75zM19 19H5V5h14v14z"/></svg>
+          Attendance</a>
+      </li>
+
+        <li class="nav-item w-100 ">
+        <a class="nav-link  text-white" href="{% url 'holiday_list' %}">
+          <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#FFFFFF"><path d="M500-120v-440q-14-18-34.5-29T420-600q-25 0-45.5 10.5T340-560h-80q0-117 81.5-198.5T540-840q117 0 198.5 81.5T820-560h-80q-14-19-34.5-29.5T660-600q-25 0-45.5 11T580-560v440h-80Zm33-520h14q23-19 52.5-29.5T661-680q11 0 21.5 1.5T704-675q-27-39-70-62t-94-23q-51 0-94 23t-70 62q11-2 21.5-3.5T419-680q32 0 61.5 10.5T533-640Zm107 520v-240h240v240h-80v-160h-80v160h-80Zm-480 0v-122q-18-5-30-19t-14-34L80-680h25q23 0 40.5 16t19.5 39l24 265h171q33 0 56.5 23.5T440-280v40h-40v120h-60v-120H220v120h-60Zm380-520Z"/></svg>
+          Holidays</a>
+      </li>
+
+      {% comment %} {% if user.is_superuser  %}
+              <li class="nav-item w-100 ">
+        <a class="nav-link  text-white" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#FFFFFF"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h168q14-36 44-58t68-22q38 0 68 22t44 58h168q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm280-670q13 0 21.5-8.5T510-820q0-13-8.5-21.5T480-850q-13 0-21.5 8.5T450-820q0 13 8.5 21.5T480-790ZM200-246q54-53 125.5-83.5T480-360q83 0 154.5 30.5T760-246v-514H200v514Zm280-194q58 0 99-41t41-99q0-58-41-99t-99-41q-58 0-99 41t-41 99q0 58 41 99t99 41ZM280-200h400v-10q-42-35-93-52.5T480-280q-56 0-107 17.5T280-210v10Zm200-320q-25 0-42.5-17.5T420-580q0-25 17.5-42.5T480-640q25 0 42.5 17.5T540-580q0 25-17.5 42.5T480-520Zm0 17Z"/></svg>
+          Designation</a>
+      </li> {% endcomment %}
+      {% comment %} {% endif %} {% endcomment %}
+
+    </ul>
+  </div>
+
+
+
+
+  <!-- Main Content -->
+  <div class="content">
+    {% block content %}
+    {% endblock %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+<script>
+  // Get sidebar and top navbar
+  
+ const homeBtn = document.getElementById('home-link');
+const topNavbar1  = document.getElementById('top-navbar');
+const topNavbar2 = document.querySelector('.top-navbar-2'); 
+const myspaceoverview = document.querySelector('.myspace-overview-contents')
+const sidebarLinks = document.querySelectorAll('.sidebar .nav-link');
+
+sidebarLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      
+        sidebarLinks.forEach(l => l.classList.remove('active'));
+       
+        link.classList.add('active');
+
+        // Navbar toggle
+        if (link === homeBtn) {
+            topNavbar1.style.display = 'block';
+            topNavbar2.style.display = 'none';
+            myspaceoverview.style.display='none'
+        } else {
+            topNavbar1.style.display = 'none';
+            topNavbar2.style.display = 'none';
+            myspaceoverview.style.display='none'
+        }
+    });
+});
+
+
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

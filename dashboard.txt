@@ -1,0 +1,327 @@
+{% extends "employee_portal/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+
+{% block content %}
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-expand-lg top-navbar"id="top-navbar"  style="background-color: #2E3B61;">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon" ></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link text-white active" href="{% url 'dashboard' %}">My space</a>
+          </li>
+          <a href="{% url 'logout' %}" class="btn btn-danger float-end"> Logout</a>
+          {% comment %} <li class="nav-item">
+            <a class="nav-link text-white" href="#">Team</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white" href="#">Organization</a>
+          </li>
+            <li class="nav-item"> <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+            </li> {% endcomment %}
+         
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+    <!-- top navbar 2 -->
+  <nav class="navbar navbar-expand-lg top-navbar-2 bg-light">
+  <div class="container-fluid">
+    <ul class="navbar-nav">
+      <a class="nav-link active" href="#">Overview</a></li>
+      {% comment %} <li class="nav-item"><a class="nav-link" href="#">Dashboard</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">Calendar</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">Delegation</a></li> {% endcomment %}
+
+    </ul>
+  </div>
+</nav>
+
+
+
+  <div class="myspace-overview-contents">
+
+
+  <div class="position-relative ms-5 ps-1">
+    <img src="{% static 'images/nature.jpg' %}" class="img-fluid w-100" style="height: 220px; object-fit: cover;" alt="Nature">
+  </div>
+
+<div class="bg-light py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-3">
+      <div class="card text-center shadow-sm " style="width: 18rem; height: 250px; margin-top: -80px;">
+        <div class="card-body">
+          
+          <img class="rounded employee-img" 
+           src="{% if employee.photo %}{{ employee.photo.url }}{% else %}{% static 'images/user.avif' %}{% endif %}" 
+           alt="Profile"
+           style="width: 110px; height: 110px; object-fit: cover; position: absolute; top: -70px; left: 50%; transform: translateX(-50%); border: 3px solid white;">
+
+          <h5 class="card-title mb-1 mt-5 fw-bold">{% if employee %}{{ employee.first_name }} {{ employee.last_name }}{% else %}No Name{% endif %}</h5>
+          <p class="text-muted mb-2">{{ employee.title  }}</p>
+          <p class="text-danger mb-1" id="status">Checked-Out</p>
+<h6 class="fw-semibold my-2" id="timer">00 : 00 : 00</h6>
+<button id="check-btn" class="btn btn-success rounded-pill px-4">Check-in</button>
+        </div>
+        </div> 
+      </div>
+  
+      <div class="col-9">
+         <div class="card text-center shadow-sm " style=" height: 500px; margin-top: -80px;">
+          <div class="card-title">
+            <h5 class="text-start ps-3 pt-3">Weekly Work Summary ({{ start_of_week }} - {{ end_of_week }})</h5>
+            
+          </div>
+
+       <div class="card-header">
+        {% comment %} <h5>Weekly Work Summary ({{ start_of_week }} - {{ end_of_week }})</h5> {% endcomment %}
+        <h4 class="text-start ps-3">General</h4>
+            <p class="text-start ps-3">9.00 AM - 6.00 PM</p>
+    </div>
+    <div class="card-body table-responsive">
+        <table class="table table-bordered text-center">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Worked Hours</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in weekly_summary %}
+                    <tr>
+                        <td>{{ att.date|date:"D - d " }}</td>
+                        <td>{{ att.worked }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">No attendance records this week.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+    </div>
+
+
+
+    </div> 
+  </div>
+  </div> 
+  
+
+  
+</div>
+
+  
+
+</div>
+
+{% comment %} <script>
+
+document.addEventListener("DOMContentLoaded", function() {
+    const checkBtn = document.getElementById("check-btn");
+    const timerDisplay = document.getElementById("timer");
+    const statusDisplay = document.getElementById("status");
+
+    let timerInterval;
+    let duration = 0;
+    let checkedIn = false;
+
+    function updateTimerDisplay() {
+        let hrs = Math.floor(duration / 3600);
+        let mins = Math.floor((duration % 3600) / 60);
+        let secs = duration % 60;
+        timerDisplay.textContent = `${String(hrs).padStart(2,'0')} : ${String(mins).padStart(2,'0')} : ${String(secs).padStart(2,'0')}`;
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            duration++;
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    // Load existing attendance on page load
+    fetch("{% url 'toggle_check' %}")
+    .then(res => res.json())
+    .then(data => {
+        duration = data.duration_seconds || 0;
+        if (data.check_in && !data.check_out) {
+            checkedIn = true;
+            statusDisplay.textContent = "Checked-in";
+            checkBtn.textContent = "Check-out";
+            checkBtn.classList.remove("btn-success");
+            checkBtn.classList.add("btn-danger");
+
+            // Add live session seconds
+            const parts = data.check_in.split(":");
+            const now = new Date();
+            const checkInTime = new Date();
+            checkInTime.setHours(parts[0], parts[1], parts[2]);
+            duration += Math.floor((now - checkInTime)/1000);
+            startTimer();
+        }
+        updateTimerDisplay();
+    });
+
+    checkBtn.addEventListener("click", function() {
+        const action = checkedIn ? "checkout" : "checkin";
+
+        fetch("{% url 'toggle_check' %}", {
+            method: "POST",
+            headers: {"X-CSRFToken": "{{ csrf_token }}"},
+            body: new URLSearchParams({"action": action})
+        })
+        .then(res => res.json())
+        .then(data => {
+            duration = data.duration_seconds;
+            if (action === "checkin") {
+                checkedIn = true;
+                statusDisplay.textContent = "Checked-in";
+                checkBtn.textContent = "Check-out";
+                checkBtn.classList.remove("btn-success");
+                checkBtn.classList.add("btn-danger");
+                startTimer();
+            } else if (action === "checkout") {
+                checkedIn = false;
+                clearInterval(timerInterval);
+                statusDisplay.textContent = "Checked-out";
+                checkBtn.textContent = "Check-in";
+                checkBtn.classList.remove("btn-danger");
+                checkBtn.classList.add("btn-success");
+                updateTimerDisplay();
+            }
+        });
+    });
+});
+
+
+
+</script> {% endcomment %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const checkBtn = document.getElementById("check-btn");
+    const timerDisplay = document.getElementById("timer");
+    const statusDisplay = document.getElementById("status");
+
+    let timerInterval;
+    let duration = 0; // seconds
+    let checkedIn = false;
+
+    function updateTimerDisplay() {
+        let hrs = Math.floor(duration / 3600);
+        let mins = Math.floor((duration % 3600) / 60);
+        let secs = duration % 60;
+        timerDisplay.textContent = `${String(hrs).padStart(2,'0')} : ${String(mins).padStart(2,'0')} : ${String(secs).padStart(2,'0')}`;
+    }
+
+    function startTimer() {
+        if (!timerInterval) {
+            timerInterval = setInterval(() => {
+                duration++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+    }
+
+    function pauseTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+
+            // Save current duration using sendBeacon
+            const url = "{% url 'toggle_check' %}";
+            const data = new URLSearchParams();
+            data.append("action", "pause");
+            data.append("duration", duration);
+            data.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+            navigator.sendBeacon(url, data);
+        }
+    }
+
+    // Load existing attendance on page load
+    fetch("{% url 'toggle_check' %}")
+        .then(res => res.json())
+        .then(data => {
+            duration = data.duration_seconds || 0;
+
+            // Only mark checkedIn true if currently checked in
+            checkedIn = !!(data.check_in && !data.check_out);
+
+            if (checkedIn) {
+                statusDisplay.textContent = "Checked-in";
+                checkBtn.textContent = "Check-out";
+                checkBtn.classList.remove("btn-success");
+                checkBtn.classList.add("btn-danger");
+                // DO NOT start timer automatically
+            } else {
+                statusDisplay.textContent = "Checked-out";
+                checkBtn.textContent = "Check-in";
+                checkBtn.classList.remove("btn-danger");
+                checkBtn.classList.add("btn-success");
+            }
+
+            updateTimerDisplay();
+        });
+
+    checkBtn.addEventListener("click", function() {
+          const screenWidth = window.innerWidth;
+
+    // Allow check-in only if screen width >= 1024px (Laptop)
+    if (screenWidth < 1024) {
+        alert("Check-in is allowed only on laptop screens!");
+        return; // Stop execution
+    }
+        const action = checkedIn ? "checkout" : "checkin";
+
+        fetch("{% url 'toggle_check' %}", {
+            method: "POST",
+            headers: {"X-CSRFToken": "{{ csrf_token }}"},
+            body: new URLSearchParams({"action": action, "duration": duration})
+        })
+        .then(res => res.json())
+        .then(data => {
+            duration = data.duration_seconds;
+
+            if (action === "checkin") {
+                checkedIn = true;
+                statusDisplay.textContent = "Checked-in";
+                 statusDisplay.classList.remove("text-danger");
+    statusDisplay.classList.add("text-success");
+                checkBtn.textContent = "Check-out";
+                checkBtn.classList.remove("btn-success");
+                checkBtn.classList.add("btn-danger");
+                startTimer(); // START timer only when user clicks check-in
+            } else if (action === "checkout") {
+                checkedIn = false;
+                pauseTimer();
+                statusDisplay.textContent = "Checked-out";
+                 statusDisplay.classList.remove("text-success");
+    statusDisplay.classList.add("text-danger");
+                checkBtn.textContent = "Check-in";
+                checkBtn.classList.remove("btn-danger");
+                checkBtn.classList.add("btn-success");
+                updateTimerDisplay();
+            }
+        });
+    });
+
+    // Pause timer on tab close / refresh
+    window.addEventListener("beforeunload", pauseTimer);
+});
+
+</script>
+
+
+</div>   <!------------final div-->
+
+{% endblock %}
