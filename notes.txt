@@ -852,3 +852,431 @@ def dashboard(request):
             )
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
+    # @login_required
+# def toggle_check(request):
+#     today = date.today()
+#     attendance, created = Attendance.objects.get_or_create(
+#         user=request.user, date=today
+#     )
+
+#     now = datetime.now()
+
+#     if request.method == "POST":
+#         action = request.POST.get("action")
+#         duration_from_frontend = request.POST.get("duration")
+
+#         if duration_from_frontend:
+#             try:
+#                 duration_from_frontend = int(duration_from_frontend)
+#             except ValueError:
+#                 duration_from_frontend = attendance.duration_seconds
+#         else:
+#             duration_from_frontend = attendance.duration_seconds
+
+#         # disable checkin after 8 hours
+#         if attendance.eight_hours_completed and action == "checkin":
+#             return JsonResponse(
+#                 {
+#                     "status": "eight_hours_completed",
+#                     "message": "You’ve already completed 8 working hours for today",
+#                 }
+#             )
+
+#         if action == "checkin":
+#             if not attendance.check_in:
+#                 attendance.check_in = now.time()
+#                 attendance.check_out = None
+
+#                 attendance.save()
+#             return JsonResponse(
+#                 {
+#                     "status": "checked_in",
+#                     "duration_seconds": attendance.duration_seconds,
+#                 }
+#             )
+
+#         elif action == "checkout":
+#             if attendance.check_in:
+#                 attendance.duration_seconds = duration_from_frontend
+#                 if attendance.duration_seconds >= 28800:
+#                     attendance.eight_hours_completed = True
+#                 attendance.check_out = now
+#                 attendance.save()
+#             return JsonResponse(
+#                 {
+#                     "status": "checked_out",
+#                     "duration_seconds": attendance.duration_seconds,
+#                 }
+#             )
+
+#         elif action == "pause":
+#             attendance.duration_seconds = duration_from_frontend
+#             if attendance.duration_seconds >= 28800:
+#                 attendance.eight_hours_completed = True
+#             attendance.save()
+#         return JsonResponse(
+#             {"status": "paused", "duration_seconds": attendance.duration_seconds}
+#         )
+
+#     elif request.method == "GET":
+#         data = {
+#             "check_in": (
+#                 attendance.check_in.strftime("%H:%M:%S")
+#                 if attendance.check_in
+#                 else None
+#             ),
+#             "check_out": (
+#                 attendance.check_out.strftime("%H:%M:%S")
+#                 if attendance.check_out
+#                 else None
+#             ),
+#             "duration_seconds": attendance.duration_seconds,
+#             "eight_hours_completed": attendance.eight_hours_completed,
+#         }
+#         return JsonResponse(data)
+
+
+# from django.utils import timezone
+# from django.http import JsonResponse
+
+
+
+-----js
+{% extends "employee_portal/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}
+My Dashboard
+{% endblock %}
+
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+ 
+
+
+    <!-- top navbar 2 -->
+  <nav class="navbar navbar-expand-lg top-navbar-2">
+  <div class="container-fluid">
+    <ul class="navbar-nav">
+
+
+    </ul>
+  </div>
+</nav>
+
+
+
+  <div class="myspace-overview-contents">
+
+
+  <div class="position-relative">
+    <img src="{% static 'images/nature.jpg' %}" class="img-fluid w-100" style="height: 220px; object-fit: cover;width: 70%;margin-left: 54px;" alt="Nature">
+  </div>
+
+<div class="bg-white border-0">
+  <div class="container-fluid w-100">
+    <div class="row ms-4">
+      <div class="col-3 card_col">
+      <div class="card text-center shadow-sm card_1" style="width: 18rem; height: 250px; margin-top: -80px;">
+        <div class="card-body">
+          
+          <img class="rounded employee-img" 
+           src="{% if employee.photo %}{{ employee.photo.url }}{% else %}{% static 'images/user.avif' %}{% endif %}" 
+           alt="Profile"
+           style="width: 110px; height: 110px; object-fit: cover; position: absolute; top: -70px; left: 50%; transform: translateX(-50%); border: 3px solid white;">
+
+          <h5 class="card-title mb-1 mt-5 fw-bold">{% if employee %}{{ employee.first_name }} {{ employee.last_name }}{% else %}No Name{% endif %}</h5>
+          <p class="text-muted mb-2">{{ employee.title  }}</p>
+          <p class="text-danger mb-1" id="status">Checked-Out</p>
+<h6 class="fw-semibold my-2" id="timer">00 : 00 : 00</h6>
+<button id="check-btn" class="btn btn-success rounded-pill px-4">Check-in</button>
+        </div>
+        </div> 
+      </div>
+  
+      <div class="col-9">
+         <div class="card text-center shadow-sm " style=" height: 500px; margin-top: -80px;">
+          <div class="card-title">
+            <h5 class="text-start ps-3 pt-3">Weekly Work Summary ({{ start_of_week }} - {{ end_of_week }})</h5>
+            
+          </div>
+
+
+
+ <div class="card shadow-sm border-0">
+  <div class="card-body">
+  
+    </div>
+
+    <div class="bg-light p-3 rounded-3">
+      <div class="mb-3">
+        <span class="fw-semibold  d-block text-start">General</span>
+        <small class="text-muted d-block text-start">9:30 AM - 6:30 PM</small>
+      </div>
+
+      <div class="d-flex justify-content-between text-center border-top pt-3">
+  {% for att in weekly_summary %}
+    <div class="flex-fill">
+      <div class="fw-semibold text-secondary">{{ att.date|date:"D" }}</div>
+      <div class="fw-bold">{{ att.date|date:"d" }}</div>
+
+      {% if att.is_weekend %}
+        <small class="text-warning fw-semibold">Weekend</small>
+      {% elif att.worked == "Absent" %}
+        <small class="text-danger fw-semibold">Absent</small>
+      {% elif att.worked == "00:00:00" or not att.worked %}
+        <small class="text-danger fw-semibold">Absent</small>
+      {% else %}
+        <small class="text-success fw-semibold">{{ att.worked }}</small>
+      {% endif %}
+    </div>
+  {% empty %}
+    <div class="flex-fill text-muted">No records</div>
+  {% endfor %}
+</div>
+
+</div>
+
+    </div> 
+  </div>
+  </div> 
+  
+
+  
+</div>
+
+  
+
+</div>
+{% comment %} ------------------------------------------------------------------------------------------- {% endcomment %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const checkBtn = document.getElementById("check-btn");
+    const timerDisplay = document.getElementById("timer");
+    const statusDisplay = document.getElementById("status");
+    
+
+    let timerInterval;
+    let duration = 0;
+    let checkedIn = false;
+    let lastActiveTime = Date.now();
+
+
+    function updateTimerDisplay() {
+        let hrs = Math.floor(duration / 3600);
+        let mins = Math.floor((duration % 3600) / 60);
+        let secs = duration % 60;
+        timerDisplay.textContent = `${String(hrs).padStart(2,'0')} : ${String(mins).padStart(2,'0')} : ${String(secs).padStart(2,'0')}`;
+    }
+
+ 
+
+//start timer---------------------------------------------------
+function startTimer() {
+    if (!timerInterval) {
+      
+        timerInterval = setInterval(() => {
+            duration++;
+            updateTimerDisplay();
+            const now = new Date();
+            if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
+                // Midnight reached, stop timer
+                clearInterval(timerInterval);
+                timerInterval = null;
+                checkedIn = false;
+                checkBtn.textContent = "Check-in";
+                checkBtn.disabled = false;
+                checkBtn.classList.remove("btn-danger");
+                checkBtn.classList.add("btn-success");
+                statusDisplay.textContent = "Checked-out (auto at 12 AM)";
+               // Send updated duration to backend
+                fetch("{% url 'toggle_check' %}", {
+                    method: "POST",
+                    headers: {"X-CSRFToken": "{{ csrf_token }}"},
+                    body: new URLSearchParams({
+                        "action": "pause",
+                        "duration": duration
+                    })
+                });
+                return;
+            }
+       
+
+          
+         
+            if (duration >= 28800) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                duration = 28800;
+                updateTimerDisplay();
+             
+                checkBtn.textContent = "Check-in";
+             
+                checkBtn.classList.remove("btn-danger");
+                checkBtn.classList.add("btn-success");
+
+                
+
+                fetch("{% url 'toggle_check' %}", {
+                    method: "POST",
+                    headers: {"X-CSRFToken": "{{ csrf_token }}"},
+                    body: new URLSearchParams({
+                        "action": "pause",
+                        "duration": duration
+                    })
+                });
+
+                return;
+            }
+
+        }, 1000);
+    }
+}
+
+//pause timer function
+    function pauseTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+
+            const url = "{% url 'toggle_check' %}";
+            const data = new URLSearchParams();
+            data.append("action", "pause");
+            data.append("duration", duration);
+            data.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+            navigator.sendBeacon(url, data);
+        }
+    }
+
+    
+  // attendance 
+fetch("{% url 'toggle_check' %}")
+    .then(res => res.json())
+    .then(data => {
+        duration = data.duration_seconds || 0;
+        
+
+        // 8 hours already completed condition
+        if (data.eight_hours_completed) {
+            duration = 28800;
+            updateTimerDisplay();
+            clearInterval(timerInterval);
+            timerInterval = null;
+            checkedIn = false;
+            checkBtn.textContent = "Check-in";
+            checkBtn.disabled = true;
+            checkBtn.classList.remove("btn-danger");
+            checkBtn.classList.add("btn-success");
+            statusDisplay.innerHTML = "<span class='text-success fw-bold'>Your working hours has completed for today!</span>";
+            return; 
+        }
+
+        //  If user is checked-in currently
+        if (data.check_in !== null && data.check_out === null) {
+            checkedIn = true;
+            statusDisplay.textContent = "Checked-in";
+            statusDisplay.classList.remove("text-danger");
+            statusDisplay.classList.add("text-success");
+            checkBtn.textContent = "Check-out";
+            checkBtn.classList.remove("btn-success");
+            checkBtn.classList.add("btn-danger");
+            startTimer();
+        } 
+        // If user has checked-out already
+        else if (data.check_out !== null) {
+            checkedIn = false;
+            statusDisplay.textContent = "Checked-out";
+            statusDisplay.classList.remove("text-success");
+            statusDisplay.classList.add("text-danger");
+            checkBtn.textContent = "Check-in";
+            checkBtn.classList.remove("btn-danger");
+            checkBtn.classList.add("btn-success");
+        } 
+        // If user never checked in today
+        else {
+            checkedIn = false;
+            statusDisplay.textContent = "Checked-out";
+            statusDisplay.classList.remove("text-success");
+            statusDisplay.classList.add("text-danger");
+            checkBtn.textContent = "Check-in";
+            checkBtn.disabled = false;
+        }
+
+        updateTimerDisplay();
+    });
+
+    checkBtn.addEventListener("click", function() {
+          const screenWidth = window.innerWidth;
+
+ 
+    if (screenWidth < 1000) {
+        alert("Check-in is allowed only on laptop screens!");
+        return;
+    }
+
+    
+
+        const action = checkedIn ? "checkout" : "checkin";
+
+        fetch("{% url 'toggle_check' %}", {
+            method: "POST",
+            headers: {"X-CSRFToken": "{{ csrf_token }}"},
+            body: new URLSearchParams({"action": action, "duration": duration})
+        })
+        .then(res => res.json())
+        .then(data => {
+            duration = data.duration_seconds;
+
+            if (data.status === "eight_hours_completed") {
+              checkedIn = false;
+              clearInterval(timerInterval);
+              timerInterval = null;
+              duration = 28800;
+              updateTimerDisplay(); 
+              checkBtn.textContent = "Check-in";
+              checkBtn.disabled = true;
+              checkBtn.classList.remove("btn-danger");
+              checkBtn.classList.add("btn-success");
+              statusDisplay.innerHTML = "<span class='text-success fw-bold'>Your working hours has completed for today!!</span>";
+            return; 
+}
+
+
+            if (action === "checkin") {
+                checkedIn = true;
+                statusDisplay.textContent = "Checked-in";
+                 statusDisplay.classList.remove("text-danger");
+    statusDisplay.classList.add("text-success");
+                checkBtn.textContent = "Check-out";
+                checkBtn.classList.remove("btn-success");
+                checkBtn.classList.add("btn-danger");
+                startTimer();
+            } else if (action === "checkout") {
+                checkedIn = false;
+                pauseTimer();
+                statusDisplay.textContent = "Checked-out";
+                 statusDisplay.classList.remove("text-success");
+    statusDisplay.classList.add("text-danger");
+                checkBtn.textContent = "Check-in";
+                checkBtn.classList.remove("btn-danger");
+                checkBtn.classList.add("btn-success");
+                updateTimerDisplay();
+            }
+        });
+    });
+
+
+
+});
+
+</script>
+
+
+</div>   <!------------final div-->
+
+{% endblock %}

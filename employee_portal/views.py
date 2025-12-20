@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from .models import Attendance
 from django.http import JsonResponse
-from datetime import date, timedelta
+from datetime import date, timedelta, time
 from calendar import monthrange
 from django.db.models import Sum
 from django.contrib import messages
@@ -356,95 +356,8 @@ def myspace_overview(request):
     return render(request, "employee_portal/dashboard.html", {"emp": employee})
 
 
-# @login_required
-# def toggle_check(request):
-#     today = date.today()
-#     attendance, created = Attendance.objects.get_or_create(
-#         user=request.user, date=today
-#     )
-
-#     now = datetime.now()
-
-#     if request.method == "POST":
-#         action = request.POST.get("action")
-#         duration_from_frontend = request.POST.get("duration")
-
-#         if duration_from_frontend:
-#             try:
-#                 duration_from_frontend = int(duration_from_frontend)
-#             except ValueError:
-#                 duration_from_frontend = attendance.duration_seconds
-#         else:
-#             duration_from_frontend = attendance.duration_seconds
-
-#         # disable checkin after 8 hours
-#         if attendance.eight_hours_completed and action == "checkin":
-#             return JsonResponse(
-#                 {
-#                     "status": "eight_hours_completed",
-#                     "message": "You’ve already completed 8 working hours for today",
-#                 }
-#             )
-
-#         if action == "checkin":
-#             if not attendance.check_in:
-#                 attendance.check_in = now.time()
-#                 attendance.check_out = None
-
-#                 attendance.save()
-#             return JsonResponse(
-#                 {
-#                     "status": "checked_in",
-#                     "duration_seconds": attendance.duration_seconds,
-#                 }
-#             )
-
-#         elif action == "checkout":
-#             if attendance.check_in:
-#                 attendance.duration_seconds = duration_from_frontend
-#                 if attendance.duration_seconds >= 28800:
-#                     attendance.eight_hours_completed = True
-#                 attendance.check_out = now
-#                 attendance.save()
-#             return JsonResponse(
-#                 {
-#                     "status": "checked_out",
-#                     "duration_seconds": attendance.duration_seconds,
-#                 }
-#             )
-
-#         elif action == "pause":
-#             attendance.duration_seconds = duration_from_frontend
-#             if attendance.duration_seconds >= 28800:
-#                 attendance.eight_hours_completed = True
-#             attendance.save()
-#         return JsonResponse(
-#             {"status": "paused", "duration_seconds": attendance.duration_seconds}
-#         )
-
-#     elif request.method == "GET":
-#         data = {
-#             "check_in": (
-#                 attendance.check_in.strftime("%H:%M:%S")
-#                 if attendance.check_in
-#                 else None
-#             ),
-#             "check_out": (
-#                 attendance.check_out.strftime("%H:%M:%S")
-#                 if attendance.check_out
-#                 else None
-#             ),
-#             "duration_seconds": attendance.duration_seconds,
-#             "eight_hours_completed": attendance.eight_hours_completed,
-#         }
-#         return JsonResponse(data)
-
-
-# from django.utils import timezone
-# from django.http import JsonResponse
-
-
 def toggle_check(request):
+
     user = request.user
     today = timezone.localdate()
 
@@ -459,6 +372,25 @@ def toggle_check(request):
             "is_running": False,
         },
     )
+    now = timezone.now()
+
+    running_attendance = Attendance.objects.filter(
+        user=request.user, start_time__isnull=False, check_out__isnull=True
+    ).first()
+
+    # If the user has a running attendance from today
+    if running_attendance:
+        midnight = timezone.make_aware(
+            datetime.combine(running_attendance.date + timedelta(days=1), time.min)
+        )
+
+        if now >= midnight:
+            elapsed = (midnight - running_attendance.start_time).total_seconds()
+            running_attendance.duration_seconds += int(elapsed)
+            running_attendance.check_out = midnight.time()
+            running_attendance.start_time = None
+            running_attendance.is_running = False
+            running_attendance.save()
 
     # --------------- GET ----------------
     if request.method == "GET":
@@ -469,7 +401,7 @@ def toggle_check(request):
             elapsed = (timezone.now() - attendance.start_time).total_seconds()
             total += int(elapsed)
 
-        # clamp to 8 hours
+        # 8 hours condition
         if total >= 28800:
             total = 28800
 
@@ -511,7 +443,7 @@ def toggle_check(request):
                 }
             )
 
-        # CHECK-OUT (NO EXTRA SECONDS)
+        # CHECK-OUT
         if action in ("checkout", "check_out"):
             now = timezone.now()
 
@@ -519,7 +451,7 @@ def toggle_check(request):
                 elapsed = (now - attendance.start_time).total_seconds()
                 attendance.duration_seconds += int(elapsed)  # <— FIXED (accurate)
 
-            # clamp 8 hours
+            # 8 hours
             if attendance.duration_seconds >= 28800:
                 attendance.duration_seconds = 28800
                 attendance.eight_hours_completed = True
@@ -536,22 +468,22 @@ def toggle_check(request):
                 if attendance.eight_hours_completed
                 else "checked_out"
             )
-        return JsonResponse(
-            {"status": status, "duration_seconds": attendance.duration_seconds}
-        )
+            return JsonResponse(
+                {"status": status, "duration_seconds": attendance.duration_seconds}
+            )
 
-    # PAUSE — optional save from frontend
-    if action == "pause":
-        try:
-            duration_from_js = int(request.POST.get("duration", 0))
-        except:
-            duration_from_js = attendance.duration_seconds
+        # PAUSE
+        if action == "pause":
+            try:
+                duration_from_js = int(request.POST.get("duration", 0))
+            except:
+                duration_from_js = attendance.duration_seconds
 
-        attendance.duration_seconds = duration_from_js
-        attendance.save()
-        return JsonResponse(
-            {"status": "paused", "duration_seconds": attendance.duration_seconds}
-        )
+            attendance.duration_seconds = duration_from_js
+            attendance.save()
+            return JsonResponse(
+                {"status": "paused", "duration_seconds": attendance.duration_seconds}
+            )
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 

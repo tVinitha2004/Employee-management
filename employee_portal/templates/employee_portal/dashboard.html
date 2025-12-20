@@ -136,6 +136,36 @@ function startTimer() {
             duration++;
             updateTimerDisplay();
        
+                   
+            const now = new Date();
+            if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
+                // Midnight reached, stop timer
+                clearInterval(timerInterval);
+                timerInterval = null;
+                checkedIn = false;
+                checkBtn.textContent = "Check-in";
+                checkBtn.disabled = false;
+                checkBtn.classList.remove("btn-danger");
+                checkBtn.classList.add("btn-success");
+                statusDisplay.textContent = "Checked-out (auto at 12 AM)";
+
+                // Send updated duration to backend
+                fetch("{% url 'toggle_check' %}", {
+                    method: "POST",
+                    headers: {"X-CSRFToken": "{{ csrf_token }}"},
+                    body: new URLSearchParams({
+                        "action": "checkout",
+                      
+                    })
+                });
+                return;
+            }
+            fetch("{% url 'toggle_check' %}")
+  .then(res => res.json())
+  .then(data => {
+      duration = data.duration_seconds || 0;
+      updateTimerDisplay();  
+  });
 
           
          
@@ -307,6 +337,6 @@ fetch("{% url 'toggle_check' %}")
 </script>
 
 
-</div>   <!------------final div-->
+</div>   <!--final div-->
 
 {% endblock %}
