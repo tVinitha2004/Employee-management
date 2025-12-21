@@ -361,6 +361,10 @@ def toggle_check(request):
     user = request.user
     today = timezone.localdate()
 
+    if today.weekday() == 6:
+        messages.error(request, "Sunday check-in is not allowed.")
+        return render(request, "calendar.html")
+
     attendance, created = Attendance.objects.get_or_create(
         user=user,
         date=today,
@@ -648,6 +652,16 @@ def holiday_list(request):
         "employee_portal/holiday_list.html",
         {"holidays": holidays, "year": current_year},
     )
+
+
+def delete_holiday(request, holiday_id):
+    holiday = get_object_or_404(Holiday, id=holiday_id)
+
+    if request.method == "POST":
+        holiday.delete()
+        messages.success(request, "Holiday deleted successfully!")
+
+    return redirect("holiday_list")
 
 
 def check_today_holiday(request):

@@ -273,11 +273,13 @@ fetch("{% url 'toggle_check' %}")
     checkBtn.addEventListener("click", function() {
           const screenWidth = window.innerWidth;
 
+
  
     if (screenWidth < 1000) {
         alert("Check-in is allowed only on laptop screens!");
         return;
     }
+    
 
     
 
@@ -288,6 +290,7 @@ fetch("{% url 'toggle_check' %}")
             headers: {"X-CSRFToken": "{{ csrf_token }}"},
             body: new URLSearchParams({"action": action, "duration": duration})
         })
+        
         .then(res => res.json())
         .then(data => {
             duration = data.duration_seconds;

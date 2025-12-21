@@ -107,30 +107,7 @@ Attendance
     {% for day in days %}
     
     
-      {% comment %} <div class="day-box 
-         {% if day.is_holiday %}
-        bg-warning
-      {% elif day.is_holiday and day.date.weekday == 6 %}
-        bg-weekend
-          {% elif day.date > today %}
-              {% if day.date.weekday == 5 or day.date.weekday == 6 %}
-                 bg-weekend
-                 {% else %}
-                 bg-days
-               {% endif %}
-{% elif day.date.weekday == 5 or day.date.weekday == 6 %}
-    {% if day.status == 'Present' %}
-        bg-present
-    {% else %}
-        bg-weekend
-    {% endif %}
-{% elif day.status == 'Present' %}
-    bg-present
-{% elif day.status == 'Absent' %}
-    bg-absent
-{% else %}
-    bg-white
-{% endif %} "> {% endcomment %}
+    
 
 <div class="day-box 
     {% if day.date.weekday == 5 or day.date.weekday == 6 %}
@@ -182,6 +159,8 @@ Attendance
         <span class="text-success small">{{ day.hours|default:"-" }} HRS</span>
       
       {% endif %}
+      
+
 
     {% elif day.status == 'Absent' and not day.is_holiday %}
       <span class="text-danger fw-bold mt-1">A</span>
@@ -203,6 +182,7 @@ Attendance
       </div>
     {% endfor %}
   </div>
+  
 
 {% if total_minutes > 0 or total_hours > 0 %}
   {% with total_time=total_hours|add:":"|add:total_minutes|stringformat:"02d" %}

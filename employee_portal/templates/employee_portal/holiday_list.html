@@ -84,6 +84,9 @@ Holidays
           <th class="py-3 ps-3"> Date</th>
           <th class="py-3 ps-3"> Day</th>
           <th class="py-3 ps-3"> Description</th>
+          {% if user.is_superuser %}
+<th class="py-3 ps-3">Delete</th>
+{% endif %}
         </tr>
       </thead>
       <tbody>
@@ -92,6 +95,17 @@ Holidays
           <td class="ps-3">{{ h.date|date:"d M Y" }}</td>
           <td class="ps-3">{{ h.date|date:"l" }}</td>
           <td class="ps-3">{{ h.description }}</td>
+          {% if user.is_superuser %}
+<td class="ps-3">
+  <form method="POST" action="{% url 'delete_holiday' h.id %}"
+        onsubmit="return confirm('Are you sure you want to delete this holiday?');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger btn-sm">
+      Delete
+    </button>
+  </form>
+</td>
+{% endif %}
         </tr>
         {% empty %}
         <tr>
