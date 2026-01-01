@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import datetime, timedelta
+from django.core.exceptions import ValidationError
 
 
 class Designation(models.Model):
@@ -12,15 +13,35 @@ class Designation(models.Model):
 
 
 class Employee(models.Model):
+    ROLE_CHOICES = (
+        ("admin", "Admin"),
+        ("employee", "Employee"),
+    )
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="employee")
     DESIGNATION_CHOICES = [
         ("CEO", "CEO"),
         ("Administration", "Administration"),
         ("Manager", "Manager"),
         ("Assistant Manager", "Assistant Manager"),
         ("Team Member", "Team Member"),
+        ("Managing Director", "Managing Director"),
+        ("Chief Executive Officer", "Chief Executive Officer"),
+        ("Software Engineer", "Software Engineer"),
+        ("Web Developer", "Web Developer"),
+        ("Frontend Developer", "Frontend Developer"),
+        ("Backend Developer", "Backend Developer"),
+        ("Full Stack Developer", "Full Stack Developer"),
+        ("Team Lead", "Team Lead"),
+        ("Technical Lead", "Technical Lead"),
+        ("Senior Manager", "Senior Manager"),
+        ("Consultant", "Consultant"),
+        ("Junior Developer", "Junior Developer"),
+        ("Trainee", "Trainee"),
+        ("Intern", "Intern"),
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
-    # designation = models.CharField(max_length=100)
+
     check_in_status = models.BooleanField(default=False)
 
     # candidate details
@@ -28,6 +49,8 @@ class Employee(models.Model):
     last_name = models.CharField(max_length=100, blank=True, null=True)
     official_email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
+    # dob
+    dob = models.DateField(blank=True, null=True)
     uan_number = models.CharField(max_length=20, blank=True, null=True)
     aadhaar_number = models.CharField(max_length=20, blank=True, null=True)
     pan_number = models.CharField(max_length=20, blank=True, null=True)
@@ -144,3 +167,58 @@ class Holiday(models.Model):
 
     def __str__(self):
         return f"{self.date} - {self.description}"
+
+
+class Task(models.Model):
+    STATUS_CHOICES = [
+        ("Pending", "Pending"),
+        ("In Progress", "In Progress"),
+        ("Completed", "Completed"),
+    ]
+
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    image = models.ImageField(upload_to="task_images/", blank=True, null=True)
+
+    assigned_to = models.ForeignKey(
+        Employee, on_delete=models.CASCADE, related_name="tasks"
+    )
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
+
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+
+    worked_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+    def worked_hours_display(self):
+        hours = int(self.worked_hours)
+        minutes = int((self.worked_hours - hours) * 60)
+        return f"{hours}:{minutes:02d}"
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        if self.worked_hours > 4:
+            raise ValidationError("Maximum 4 hours only can select")
+
+        if self.start_date and self.end_date:
+            if self.end_date < self.start_date:
+                raise ValidationError("End date cannot be before start date")
+
+    def __str__(self):
+        return self.title
+
+
+class Leave(models.Model):
+    employee = models.ForeignKey("Employee", on_delete=models.CASCADE)
+    employee_name = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    command = models.TextField(blank=True, null=True)
+    total_days = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee_name} ({self.start_date} to {self.end_date})"

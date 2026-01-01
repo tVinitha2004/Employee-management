@@ -101,7 +101,7 @@
       padding: 0;
       height: 100%;
     }
-    .sidebar {
+    {% comment %} .sidebar {
       width: 100px;
       min-height: 100vh;
       position: fixed; 
@@ -110,7 +110,7 @@
       justify-content: center;
       /* gap: 30px; */
       font-size: x-small;
-    }
+    } {% endcomment %}
     .content {
       /* margin-left: 250px;  */
       padding: 1rem;
@@ -148,7 +148,7 @@ position: relative;
   top: 0;
   left: 0;
   height: 100vh;
-  z-index: 9999; /* keep it above everything */
+  z-index: 9999;
 
 }
 
@@ -163,6 +163,48 @@ position: relative;
     border-bottom: 3px solid #2daad8;
 }
 
+/* ===============================
+   SIDEBAR RESPONSIVE BEHAVIOR
+================================= */
+
+/* Desktop & Tablet */
+@media (min-width: 768px) {
+  .sidebar {
+    display: block;
+    transform: translateX(0);
+  }
+
+  .content {
+    margin-left:40px;
+  }
+}
+
+/* Mobile View */
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    background: #131e40;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 2000;
+  }
+
+  .sidebar.show {
+    transform: translateX(0);
+  }
+
+  .content {
+    margin-left: 0 !important;
+  }
+
+  .top-navbar {
+    left: 0 !important;
+  }
+}
 
     
   </style>
@@ -172,9 +214,9 @@ position: relative;
   <!-- Top Navbar -->
 <nav class="navbar navbar-expand-lg top-navbar fixed-top" id="top-navbar" style="background-color: #182449ff;">
   <div class="container-fluid">
-    <button class="navbar-toggler ms-5" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon text-white"></span>
-    </button>
+    <button class="btn text-white d-lg-none" id="sidebarToggle">
+  <i class="bi bi-list fs-2"></i>
+</button>
 
     <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
        <ul class="navbar-nav">
@@ -198,11 +240,31 @@ position: relative;
           <li class="nav-item">
             <a class="nav-link text-white active" href="{% url 'attendance_calendar' %}">Attendance</a>
           </li>
+          {% elif request.path == '/main/tasks/' %}
+                    <li class="nav-item">
+            <a class="nav-link text-white active fs-4 ps-3" href="{% url 'task_list' %}">Tasks</a>
+          </li>
+          {% elif request.path == '/main/tasks/add/' %}
+                    <li class="nav-item">
+            <a class="nav-link text-white active fs-4 ps-3" href="{% url 'task_list' %}">Add Tasks</a>
+          </li>
+          {% elif request.path == '/main/leave/add/' %}
+              <li class="nav-item">
+            <a class="nav-link text-white active fs-4 ps-3" href="{% url 'add_leave' %}">Add Leave</a>
+          </li>
+          {% elif request.path == '/main/leave-list/' %}
+              <li class="nav-item">
+            <a class="nav-link text-white active fs-5 ps-3" href="{% url 'add_leave' %}">My Leave</a>
+          </li>
+                    {% elif request.path == '/main/leave/edit/<int:leave_id>/' %}
+              <li class="nav-item">
+            <a class="nav-link text-white active fs-5 ps-3" href="{% url 'edit_leave' %}">Edit Leave</a>
+          </li>
    
         {% endif %}
       </ul>
 
-
+    </div>
       <!-- Right side profile icon -->
       <ul class="navbar-nav ms-auto">
         <li class="nav-item dropdown">
@@ -210,7 +272,7 @@ position: relative;
             {% if emp.photo %}
               <img src="{{ emp.photo.url }}" class="rounded-circle border border-2 border-light" width="40" height="40" style="object-fit: cover;">
             {% else %}
-              <img src="{% static 'images/default_user.png' %}" class="rounded-circle border border-2 border-light" width="40" height="40" style="object-fit: cover;">
+              <img src="{% static 'images/user.avif' %}" class="rounded-circle border border-2 border-light" width="40" height="40" style="object-fit: cover;">
             {% endif %}
           </a>
         </li>
@@ -231,7 +293,7 @@ position: relative;
       {% if emp.photo %}
         <img src="{{ emp.photo.url }}" class="rounded-circle me-3" width="64" height="64" style="object-fit: cover;">
       {% else %}
-        <img src="{% static 'images/default_user.png' %}" class="rounded-circle me-3" width="64" height="64" style="object-fit: cover;">
+        <img src="{% static 'images/user.avif' %}" class="rounded-circle me-3" width="64" height="64" style="object-fit: cover;">
       {% endif %}
 
       <div>
@@ -289,17 +351,29 @@ position: relative;
 
         <li class="nav-item w-100 ">
         <a class="nav-link  text-white" href="{% url 'holiday_list' %}">
-          <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#FFFFFF"><path d="M500-120v-440q-14-18-34.5-29T420-600q-25 0-45.5 10.5T340-560h-80q0-117 81.5-198.5T540-840q117 0 198.5 81.5T820-560h-80q-14-19-34.5-29.5T660-600q-25 0-45.5 11T580-560v440h-80Zm33-520h14q23-19 52.5-29.5T661-680q11 0 21.5 1.5T704-675q-27-39-70-62t-94-23q-51 0-94 23t-70 62q11-2 21.5-3.5T419-680q32 0 61.5 10.5T533-640Zm107 520v-240h240v240h-80v-160h-80v160h-80Zm-480 0v-122q-18-5-30-19t-14-34L80-680h25q23 0 40.5 16t19.5 39l24 265h171q33 0 56.5 23.5T440-280v40h-40v120h-60v-120H220v120h-60Zm380-520Z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" height="35px" viewBox="0 -960 960 960" width="35px" fill="#FFFFFF"><path d="M500-120v-440q-14-18-34.5-29T420-600q-25 0-45.5 10.5T340-560h-80q0-117 81.5-198.5T540-840q117 0 198.5 81.5T820-560h-80q-14-19-34.5-29.5T660-600q-25 0-45.5 11T580-560v440h-80Zm33-520h14q23-19 52.5-29.5T661-680q11 0 21.5 1.5T704-675q-27-39-70-62t-94-23q-51 0-94 23t-70 62q11-2 21.5-3.5T419-680q32 0 61.5 10.5T533-640Zm107 520v-240h240v240h-80v-160h-80v160h-80Zm-480 0v-122q-18-5-30-19t-14-34L80-680h25q23 0 40.5 16t19.5 39l24 265h171q33 0 56.5 23.5T440-280v40h-40v120h-60v-120H220v120h-60Zm380-520Z"/></svg>
           Holidays</a>
       </li>
 
-      {% comment %} {% if user.is_superuser  %}
+      
               <li class="nav-item w-100 ">
-        <a class="nav-link  text-white" href="#">
-          <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#FFFFFF"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h168q14-36 44-58t68-22q38 0 68 22t44 58h168q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm280-670q13 0 21.5-8.5T510-820q0-13-8.5-21.5T480-850q-13 0-21.5 8.5T450-820q0 13 8.5 21.5T480-790ZM200-246q54-53 125.5-83.5T480-360q83 0 154.5 30.5T760-246v-514H200v514Zm280-194q58 0 99-41t41-99q0-58-41-99t-99-41q-58 0-99 41t-41 99q0 58 41 99t99 41ZM280-200h400v-10q-42-35-93-52.5T480-280q-56 0-107 17.5T280-210v10Zm200-320q-25 0-42.5-17.5T420-580q0-25 17.5-42.5T480-640q25 0 42.5 17.5T540-580q0 25-17.5 42.5T480-520Zm0 17Z"/></svg>
-          Designation</a>
-      </li> {% endcomment %}
-      {% comment %} {% endif %} {% endcomment %}
+        <a class="nav-link  text-white" href="{% url 'task_list' %}">
+         <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" width="35" fill="#FFFFFF"><path d="m435.33-250 228-228L618-523.33l-183 183L338.33-437l-45 45 142 142ZM226.67-80q-27 0-46.84-19.83Q160-119.67 160-146.67v-666.66q0-27 19.83-46.84Q199.67-880 226.67-880H574l226 226v507.33q0 27-19.83 46.84Q760.33-80 733.33-80H226.67Zm314-542.67v-190.66h-314v666.66h506.66v-476H540.67Zm-314-190.66v190.66-190.66 666.66-666.66Z"/></svg>
+          Tasks</a>
+      </li> 
+      <li class="nav-item w-100 ">
+        <a class="nav-link  text-white" href="{% url 'add_leave' %}">
+         <svg width="35px" height="35px" viewBox="0 0 24 24" fill="none"xmlns="http://www.w3.org/2000/svg">
+  <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="2"/>
+  <path d="M8 2V6M16 2V6" stroke="currentColor" stroke-width="2"/>
+  <path d="M12 10C10 10 8 12 8 14" stroke="currentColor" stroke-width="2"/>
+</svg>Leave</a>
+      </li> 
+      <li class="nav-item w-100 ">
+        <a class="nav-link  text-white" href="{% url 'leave_list' %}">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" width="35" fill="#FFFFFF"><path d="M320-280q17 0 28.5-11.5T360-320q0-17-11.5-28.5T320-360q-17 0-28.5 11.5T280-320q0 17 11.5 28.5T320-280Zm0-160q17 0 28.5-11.5T360-480q0-17-11.5-28.5T320-520q-17 0-28.5 11.5T280-480q0 17 11.5 28.5T320-440Zm0-160q17 0 28.5-11.5T360-640q0-17-11.5-28.5T320-680q-17 0-28.5 11.5T280-640q0 17 11.5 28.5T320-600Zm120 320h240v-80H440v80Zm0-160h240v-80H440v80Zm0-160h240v-80H440v80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>My leave</a>
+      </li> 
+     
 
     </ul>
   </div>
@@ -343,6 +417,21 @@ sidebarLinks.forEach(link => {
         }
     });
 });
+  const toggleBtn = document.getElementById("sidebarToggle");
+  const sidebar = document.querySelector(".sidebar");
+
+  toggleBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("show");
+  });
+
+  // Auto close sidebar when clicking a menu item (mobile)
+  document.querySelectorAll(".sidebar .nav-link").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth < 768) {
+        sidebar.classList.remove("show");
+      }
+    });
+  });
 
 
 

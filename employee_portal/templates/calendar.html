@@ -51,44 +51,47 @@ Attendance
       background-color: #e3c5ffff !important;
   }
   .bg-warning {
-  background-color: #f5e08aff !important; /* nice bright yellow */
-}
-.tooltip-inner {
-  background-color: #ffcb69 !important; /* golden-yellow */
-  color: #000 !important;
-  font-weight: 600;
-  font-size: 14px;
-  border-radius: 8px;
-  padding: 8px 10px;
-  box-shadow: 0 0 10px rgba(255, 203, 105, 0.6);
+  background-color: #f5e08aff !important;
 }
 
-.tooltip.bs-tooltip-top .tooltip-arrow::before {
-  border-top-color: #ffcb69 !important;
-}
 
-  
+
+  .bg-leave {
+    background-color: #8ab9e9ff !important;
+}
 
 </style>
 
 <div class="container my-4 ms-auto ps-5 mt-5 pt-2 ">
   <div class="d-flex justify-content-center align-items-center mb-3 mt-5">
-    <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn">
-      <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#ffffffff">
+
+    <a href="?year={{ prev_year }}&month={{ prev_month }}{% if selected_user %}&user_id={{ selected_user.id }}{% endif %}">
+<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#ffffffff">
         <path d="M400-80 0-480l400-400 61 61.67L122.67-480 461-141.67 400-80Z"/>
       </svg>
     </a>
 
     <h3 class="text-center text-white mb-0">{{ month }}</h3>
 
-    <a href="?year={{ next_year }}&month={{ next_month }}" class="btn">
+    <a href="?year={{ next_year }}&month={{ next_month }}{% if selected_user %}&user_id={{ selected_user.id }}{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#ffffffff">
         <path d="m309.67-81.33-61-61.67L587-481.33 248.67-819.67l61-61.66 400 400-400 400Z"/>
       </svg>
     </a>
   </div>
 
-
+{% if all_employees %}
+<form method="get" class="mb-3">
+  <select name="user_id" class="form-select w-25" onchange="this.form.submit()">
+    {% for emp in all_employees %}
+      <option value="{{ emp.user.id }}"
+        {% if emp.user == selected_user %}selected{% endif %}>
+        {{ emp.first_name }} {{ emp.last_name }}
+      </option>
+    {% endfor %}
+  </select>
+</form>
+{% endif %}
    
  <!-- Days Calendar -->
   <div class="d-grid" style="grid-template-columns: repeat(7, 1fr); gap: 5px;">
@@ -110,7 +113,10 @@ Attendance
     
 
 <div class="day-box 
-    {% if day.date.weekday == 5 or day.date.weekday == 6 %}
+
+        {% if day.status == 'Leave' and day.date.weekday != 5 and day.date.weekday != 6 and not day.is_holiday %}
+    bg-leave
+    {% elif day.date.weekday == 5 or day.date.weekday == 6 %}
         bg-weekend
     {% elif day.is_holiday %}
         bg-warning
@@ -122,6 +128,8 @@ Attendance
         {% endif %}
     {% elif day.status == 'Present' %}
         bg-present
+{% elif day.status == 'Leave' and day.date.weekday != 5 and day.date.weekday != 6 and not day.is_holiday %}
+    bg-leave
     {% elif day.status == 'Absent' %}
         bg-absent
     {% else %}
@@ -131,7 +139,7 @@ Attendance
 
 
       
-{% if day.date > today  %}
+{% if day.date > today or day.date.weekday == 5 or day.date.weekday == 6  %}
   <div class="d-flex justify-content-center align-items-center fs-5" style="height:100%;">
     <span class="fw-bold">{{ day.date.day }}</span>
   </div>
@@ -146,17 +154,22 @@ Attendance
   
 
   <div class="mt-auto">
+    
+       
     {% if day.is_holiday %}
-  <div class="d-flex flex-column justify-content-center align-items-center holiday-tooltip"
-       >
+  <div class="d-flex flex-column justify-content-center align-items-center holiday-tooltip text-success"
+       >H
 
   </div>
+   {% elif day.status == 'Leave' %}
+        <span class="text-primary fw-bold fs-5">L</span>
     {% elif day.status == 'Present' %}
       <span class="text-success small">{{ day.hours|default:"-" }} HRS</span>
 
     {% elif day.date.weekday == 5 or day.date.weekday == 6 %}
       {% if day.status == 'Present' %}
         <span class="text-success small">{{ day.hours|default:"-" }} HRS</span>
+        
       
       {% endif %}
       
@@ -183,7 +196,7 @@ Attendance
     {% endfor %}
   </div>
   
-
+<div class="d-flex justify-content-between">
 {% if total_minutes > 0 or total_hours > 0 %}
   {% with total_time=total_hours|add:":"|add:total_minutes|stringformat:"02d" %}
   <div class="text-end text-white mt-3 p-2">
@@ -195,7 +208,16 @@ Attendance
   </div>
   {% endwith %}
 {% endif %}
-
+{% if task_hours > 0 or task_minutes > 0 %}
+<div class="text-end text-white mt-3 p-2">
+    <h5>Total Task Hours (tasks ending this month):
+        <span style="color:#ffd700;">
+            {{ task_hours|stringformat:"02d" }}:{{ task_minutes|stringformat:"02d" }} HRS
+        </span>
+    </h5>
+</div>
+{% endif %}
+</div>
 </div>
 
 

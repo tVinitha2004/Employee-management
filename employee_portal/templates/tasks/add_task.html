@@ -1,0 +1,151 @@
+{% extends "employee_portal/base.html" %}
+{% load static %}
+{% block page_title %}
+Add Tasks
+{% endblock %}
+{% block content %}
+
+<div class="container-fluid d-flex justify-content-center mt-5 pt-3 bg-light">
+  <div class="row justify-content-center w-50 p-4" style="border: 2px solid #131e40; border-radius: 10px;">
+    <div class="col-md-8 col-lg-12 justify-content-center"> 
+  <h3 style="color:#131e40;">Add Task</h3>
+  <hr>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Title -->
+    <div class="mb-3">
+      <label class="form-label">Task Title</label>
+      <input class="form-control " type="text" name="title" class="form-control"
+       value="{{ task.title|default:'' }}" required>
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3">
+      <label class="form-label">Description</label>
+     <textarea name="description" class="form-control">
+{{ task.description|default:'' }}</textarea>
+    </div>
+
+    <!-- Image -->
+    <div class="mb-3">
+     {% if task.image %}
+  <p>Current Image:</p>
+  <img src="{{ task.image.url }}" width="120" class="mb-2">
+{% endif %}
+
+<input type="file" name="image" class="form-control">
+    </div>
+
+    <!-- Assigned To -->
+    <div class="mb-3">
+      <label class="form-label">Assigned To</label>
+      <select name="assigned_to" class="form-select" required>
+  {% for emp in employees %}
+    <option value="{{ emp.id }}"
+      {% if task.assigned_to.id == emp.id %}selected{% endif %}>
+      {{ emp.first_name }} {{ emp.last_name }}
+    </option>
+  {% endfor %}
+</select>
+    </div>
+
+    <!-- Status -->
+    <div class="mb-3">
+      <label class="form-label">Status</label>
+      <select name="status" class="form-select">
+  <option value="Pending" {% if task.status == "Pending" %}selected{% endif %}>Pending</option>
+  <option value="In Progress" {% if task.status == "In Progress" %}selected{% endif %}>In Progress</option>
+  <option value="Completed" {% if task.status == "Completed" %}selected{% endif %}>Completed</option>
+</select>
+    </div>
+    {% comment %} start date and end date {% endcomment %}
+      <div class="mb-3">
+    <label class="form-label">Start Date</label>
+   <input type="date"
+       name="start_date"
+       class="form-control"
+       value="{{ task.start_date|date:'Y-m-d' }}"
+       required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">End Date</label>
+<input type="date"
+       name="end_date"
+       class="form-control"
+       value="{{ task.end_date|date:'Y-m-d' }}"
+       required>
+       <small class="text-danger" id="dateError"></small>
+  </div>
+  
+
+    <!-- Worked Hours -->
+    <div class="mb-3">
+      <label class="form-label">Worked Hours (Max 4)</label>
+      <input type="number"
+      name="worked_hours"
+           min="0"
+           max="4"
+           step="0.1"
+           class="form-control"
+           oninput="checkHours(this)"
+       value="{{ task.worked_hours|default:0 }}" class="form-control">
+         <small class="text-danger" id="hourError"></small>
+
+    </div>
+
+    
+
+    <button type="submit" class="btn btn-success px-4">
+  {% if is_edit %}Update Task{% else %}Add Task{% endif %}
+</button>
+      <button class="btn">
+        <a href="{% url 'task_list' %}" class="btn btn-secondary px-4">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg> Back
+        </a>
+      </button>
+
+  </form>
+
+  </div>
+</div>
+</div>
+
+<script>
+function checkHours(input) {
+    const err = document.getElementById("hourError");
+    if (input.value > 4) {
+        err.innerText = "Maximum 4 hours only can select";
+        input.value = 4;
+    } else {
+        err.innerText = "";
+    }
+}
+function checkDates() {
+    const start = document.querySelector("input[name='start_date']").value;
+    const end = document.querySelector("input[name='end_date']").value;
+    const err = document.getElementById("dateError");
+
+    if (start && end && start > end) {
+        err.innerText = "End date cannot be before Start date";
+        return false;
+    } else {
+        err.innerText = "";
+        return true;
+    }
+}
+
+// Call on date change
+document.querySelector("input[name='start_date']").addEventListener("change", checkDates);
+document.querySelector("input[name='end_date']").addEventListener("change", checkDates);
+
+// On form submit
+document.querySelector("form").addEventListener("submit", function(e) {
+    if (!checkDates()) {
+        e.preventDefault(); // Stop form submission
+    }
+});
+</script>
+
+{% endblock %}

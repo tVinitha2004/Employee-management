@@ -19,4 +19,14 @@ urlpatterns = [
     path(
         "holiday/delete/<int:holiday_id>/", views.delete_holiday, name="delete_holiday"
     ),
+    path("change-password/", views.change_password, name="change_password"),
+    path("tasks/", views.task_list, name="task_list"),
+    path("tasks/add/", views.add_task, name="add_task"),
+    path("tasks/view/<int:id>/", views.task_view, name="task_view"),
+    path("tasks/edit/<int:id>/", views.task_edit, name="task_edit"),
+    path("tasks/delete/<int:id>/", views.task_delete, name="task_delete"),
+    path("leave-list/", views.leave_list, name="leave_list"),
+    path("leave/add/", views.add_leave, name="add_leave"),
+    path("leave/edit/<int:leave_id>/", views.edit_leave, name="edit_leave"),
+    path("leave/delete/<int:leave_id>/", views.delete_leave, name="delete_leave"),
 ]

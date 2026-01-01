@@ -14,13 +14,13 @@
 </style>
   
 </head>
-<body class="bg-light">
+<body class="bg-light"style="background-color:#02051A">
 
-  <div class="container vh-100 d-flex align-items-center justify-content-center">
+  <div class="container-fluid vh-100 d-flex align-items-center justify-content-center"style="background-color:#02051A">
   <div class="card shadow-lg rounded-4 w-100" style="background-color:#02051A">
     <div class="row g-0">
       <!-- Left Side - Login Form -->
-      <div class="col-md-4 p-5">
+      <div class="col-md-4 ps-5 ms-md-auto mt-4">
         <img src="{% static 'images/logo.png' %}" alt="Logo" width="120" class="mb-3">
         <h3 class=""style="color:#18B0FF">Sign in</h3>
         <p class="text-white mb-4"style="color:#18B0FF">to access Mail Suite</p>
@@ -48,11 +48,11 @@
             <button type="submit" class="btn btn-block rounded-2"style="background-color:#18B0FF">Login</button>
           </div>
 
-          <div class="text-center mt-3">
+          {% comment %} <div class="text-center mt-3">
             <a href="{% url 'password_reset' %}" class="text-white small text-decoration-none">
               Forgot Password?
             </a>
-          </div>
+          </div> {% endcomment %}
 
           <p class=""style="color:#18B0FF">Sign in using</p>
           <!-- Social Media Color Icons -->
@@ -98,7 +98,7 @@
       </div>
 
       <!-- Right Side - Image -->
-      <div class="col-md-7 d-flex align-items-center justify-content-center ">
+      <div class="col-md-7 d-flex align-items-center justify-content-center">
         <img src="https://amohaa.com/assets/images/slider/home_Ai.png"
           alt="Robot" class="img-fluid p-3 " style="max-height: 600px;">
       </div>

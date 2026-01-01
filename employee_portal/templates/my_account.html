@@ -21,6 +21,21 @@ My Account
   }
 </style>
 <div class="container mt-5 pt-4 ms-auto ps-5 ms-5">
+{% if messages %}
+  {% for message in messages %}
+    {% if 'password' in message.tags or 'password_msg' in message.tags %}
+      <div class="alert alert-dismissible fade show mt-3
+          {% if 'error' in message.tags %}alert-danger
+          {% elif 'success' in message.tags %}alert-success
+          {% else %}alert-info{% endif %}">
+        
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
   <div class="card shadow-lg p-4" style="
         background: rgba(255, 255, 255, 0.85); 
         backdrop-filter: blur(8px);            
@@ -31,16 +46,36 @@ My Account
    
 
     <!-- Candidate Details -->
-    <h4 class="" style="color:#131e40;">Your Details</h4>
+
+    
+    <div class="d-flex justify-content-between mt-3">
+      <h4 class="" style="color:#131e40;">Your Details</h4>
+      
+      <div>
+<!------------------------------------------ Change Password Button -->
+<button class="btn btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#changePasswordModal"style="background-color: #0f0d78ff;">
+  Change Password
+</button>
+
+
+{% comment %} edit button {% endcomment %}
+  <button class="btn mb-1 text-white" data-bs-toggle="modal"style="background-color: #226c44ff;" data-bs-target="#employeeModal{{ emp.id }}">
+    Edit Profile
+  </button>
+      </div>
+
+</div>
     <hr>
     <div class="row">
       <div class="col-md-6 mb-3"><b>First Name:</b> {{ emp.first_name }}</div>
       <div class="col-md-6 mb-3"><b>Last Name:</b> {{ emp.last_name }}</div>
-      <div class="col-md-6 mb-3"><b>Email:</b> {{ emp.official_email }}</div>
-      <div class="col-md-6 mb-3"><b>Phone:</b> {{ emp.phone }}</div>
-      <div class="col-md-4"><b>PAN:</b> {{ emp.pan_number }}</div>
-      <div class="col-md-4"><b>Aadhaar:</b> {{ emp.aadhaar_number }}</div>
-      <div class="col-md-4"><b>UAN:</b> {{ emp.uan_number }}</div>
+      <div class="col-md-6 mb-3"><b>Email:</b> {{ emp.official_email|default_if_none:'' }}</div>
+      <div class="col-md-6 mb-3"><b>Phone:</b> {{ emp.phone|default_if_none:'' }}</div>
+      {% comment %}  {% endcomment %}
+      <div class="col-md-6 mb-3"><b>Date of birth:</b> {{ emp.dob }}</div>
+      <div class="col-md-4"><b>PAN:</b> {{ emp.pan_number|default_if_none:'' }}</div>
+      <div class="col-md-4"><b>Aadhaar:</b> {{ emp.aadhaar_number|default_if_none:'' }}</div>
+      <div class="col-md-4"><b>UAN:</b> {{ emp.uan_number|default_if_none:'' }}</div>
       <div class="col-md-12 mt-3">
         {% if emp.photo %}
           <img src="{{ emp.photo.url }}" width="150" class="img-thumbnail">
@@ -55,65 +90,65 @@ My Account
 <hr>
 <div class="row mb-3">
   <div class="col-md-4 fw-bold">Address Line 1:</div>
-  <div class="col-md-8">{{ emp.present_address_line1 }}</div>
+  <div class="col-md-8">{{ emp.present_address_line1|default_if_none:'' }}</div>
 
   <div class="col-md-4 fw-bold">Address Line 2:</div>
-  <div class="col-md-8">{{ emp.present_address_line2 }}</div>
+  <div class="col-md-8">{{ emp.present_address_line2|default_if_none:'' }}</div>
 
   <div class="col-md-4 fw-bold">City:</div>
-  <div class="col-md-8">{{ emp.present_city }}</div>
+  <div class="col-md-8">{{ emp.present_city|default_if_none:'' }}</div>
 
   <div class="col-md-4 fw-bold">State:</div>
-  <div class="col-md-8">{{ emp.present_state }}</div>
+  <div class="col-md-8">{{ emp.present_state|default_if_none:'' }}</div>
 
   <div class="col-md-4 fw-bold">Country:</div>
-  <div class="col-md-8">{{ emp.present_country }}</div>
+  <div class="col-md-8">{{ emp.present_country|default_if_none:'' }}</div>
 
   <div class="col-md-4 fw-bold">Postal Code:</div>
-  <div class="col-md-8">{{ emp.present_postal_code }}</div>
+  <div class="col-md-8">{{ emp.present_postal_code|default_if_none:'' }}</div>
 </div>
 
 <h4 class="mt-4" style="color:#131e40;">Permanent Address</h4>
 <hr>
 <div class="row">
   <div class="col-md-4 fw-bold">Address Line 1:</div>
-  <div class="col-md-8">{{ emp.permanent_address_line1 }}</div>
+  <div class="col-md-8">{{ emp.permanent_address_line1|default_if_none:"—" }}</div>
 
   <div class="col-md-4 fw-bold">Address Line 2:</div>
-  <div class="col-md-8">{{ emp.permanent_address_line2 }}</div>
+  <div class="col-md-8">{{ emp.permanent_address_line2|default_if_none:"—" }}</div>
 
   <div class="col-md-4 fw-bold">City:</div>
-  <div class="col-md-8">{{ emp.permanent_city }}</div>
+  <div class="col-md-8">{{ emp.permanent_city|default_if_none:"—" }}</div>
 
   <div class="col-md-4 fw-bold">State:</div>
-  <div class="col-md-8">{{ emp.permanent_state }}</div>
+  <div class="col-md-8">{{ emp.permanent_state|default_if_none:"—" }}</div>
 
   <div class="col-md-4 fw-bold">Country:</div>
-  <div class="col-md-8">{{ emp.permanent_country }}</div>
+  <div class="col-md-8">{{ emp.permanent_country|default_if_none:"—" }}</div>
 
   <div class="col-md-4 fw-bold">Postal Code:</div>
-  <div class="col-md-8">{{ emp.permanent_postal_code }}</div>
+  <div class="col-md-8">{{ emp.permanent_postal_code|default_if_none:"—" }}</div>
 </div>
 
     <!-- Professional -->
     <h4 class="mt-4" style="color:#131e40;">Professional Details</h4>
     <hr>
     <div class="row">
-      <div class="col-md-4 mb-3"><b>Experience:</b> {{ emp.experience }} years</div>
-      <div class="col-md-4 mb-3"><b>Source of Hire:</b> {{ emp.source_of_hire }}</div>
-      <div class="col-md-4 mb-3"><b>Skill Set:</b> {{ emp.skill_set }}</div>
-      <div class="col-md-4 mb-3"><b>Highest Qualification:</b> {{ emp.highest_qualification }}</div>
-      <div class="col-md-4 mb-3"><b>Additional Info:</b> {{ emp.additional_information }}</div>
-      <div class="col-md-4 mb-3"><b>Location:</b> {{ emp.location }}</div>
-      <div class="col-md-4 mb-3"><b>Designation:</b> {{ emp.title }}</div>
+      <div class="col-md-4 mb-3"><b>Experience:</b> {{ emp.experience|default_if_none:"—" }} years</div>
+      <div class="col-md-4 mb-3"><b>Source of Hire:</b> {{ emp.source_of_hire|default_if_none:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Skill Set:</b> {{ emp.skill_set|default_if_none:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Highest Qualification:</b> {{ emp.highest_qualification|default_if_none:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Additional Info:</b> {{ emp.additional_information|default_if_none:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Location:</b> {{ emp.location|default_if_none:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Designation:</b> {{ emp.title|default_if_none:"—" }}</div>
     </div>
 
     <!-- Salary -->
     <h4 class="mt-4" style="color:#131e40;">Salary & Department</h4>
     <hr>
     <div class="row">
-      <div class="col-md-4"><b>Current Salary:</b> {{ emp.current_salary }}</div>
-      <div class="col-md-4"><b>Department:</b> {{ emp.department }}</div>
+      <div class="col-md-4"><b>Current Salary:</b> {{ emp.current_salary|default_if_none:"—" }}</div>
+      <div class="col-md-4"><b>Department:</b> {{ emp.department|default_if_none:"—" }}</div>
       <div class="col-md-4"><b>Joining Date:</b> {{ emp.tentative_joining_date|date:"d M Y" }}</div>
     </div>
 
@@ -121,22 +156,73 @@ My Account
     <h4 class="mt-4"style="color:#131e40;">Education</h4>
     <hr>
     <div class="row">
-      <div class="col-md-4 mb-3"><b>College:</b> {{ emp.college_name }}</div>
-      <div class="col-md-4 mb-3"><b>Degree:</b> {{ emp.degree }}</div>
-      <div class="col-md-4 mb-3"><b>Field:</b> {{ emp.field_of_study }}</div>
-      <div class="col-md-4 mb-3"><b>Year:</b> {{ emp.year_of_completion }}</div>
+      <div class="col-md-4 mb-3"><b>College:</b> {{ emp.college_name|default:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Degree:</b> {{ emp.degree|default:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Field:</b> {{ emp.field_of_study|default:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Year:</b> {{ emp.year_of_completion|default:"—" }}</div>
+    </div>
+    <!--work details-->
+      <h4 class="mt-4"style="color:#131e40;">Work details</h4>
+    <hr>
+    <div class="row">
+      <div class="col-md-4 mb-3"><b>Occupation:</b> {{ emp.occupation|default:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Company:</b> {{ emp.company|default:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Summary:</b> {{ emp.summary|default:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Duration:</b> {{ emp.duration|default:"—" }}</div>
+      <div class="col-md-4 mb-3"><b>Currently work here:</b> {{ emp.currently_work_here|default:"—" }}</div>
     </div>
 
+
 {% if emp %}
-<div class="text-center mt-3">
-  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#employeeModal{{ emp.id }}">
-    Edit Profile
-  </button>
+  </div>
+
+  <!--password---------------------------------------- password modal-->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Change Password</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="POST" action="{% url 'change_password' %}">
+        {% csrf_token %}
+
+        <div class="modal-body">
+
+
+          <div class="mb-3">
+            <label>Current Password</label>
+            <input type="password" name="current_password" class="form-control" required>
+            
+          </div>
+
+          <div class="mb-3">
+            <label>New Password</label>
+            <input type="password" name="new_password" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-control" required>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Change</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            Cancel
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
 </div>
 
 
-
-  </div>
 
   <!-- Employee Edit Modal -->
 <div class="modal fade" id="employeeModal{{ emp.id }}" >
@@ -146,7 +232,7 @@ My Account
         <h5 class="modal-title">{{ emp.first_name }} {{ emp.last_name }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form method="POST" action="{% url 'edit_employee' emp.id %}">
+      <form method="POST" action="{% url 'edit_employee' emp.id %}"enctype="multipart/form-data">
         {% csrf_token %}
         <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
           <div class="card shadow-sm bg-light p-3">
@@ -163,28 +249,38 @@ My Account
             <div class="col-md-6 mb-4">
               <label>Official Email</label>
               <input type="email" name="official_email" class="form-control" value="{{ emp.official_email }}" readonly>
-            </div>
+            </div> 
             <div class="col-md-6 mb-4">
               <label>Phone</label>
-              <input type="text" name="phone" class="form-control" value="{{ emp.phone }}">
+              <input type="text" name="phone" class="form-control" value="{{ emp.phone|default_if_none:'' }}">
+            </div>
+            <div class="col-md-6 mb-4"> 
+              <label>Date of Birth</label>
+              <input type="date" name="dob" class="form-control" value="{{ emp.dob|date:'Y-m-d' }}">
             </div>
             <div class="col-md-4 mb-4">
               <label>PAN Number</label>
-              <input type="text" name="pan_number" class="form-control" value="{{ emp.pan_number}}">
+              <input type="text" name="pan_number" class="form-control" value="{{ emp.pan_number|default_if_none:''}}">
             </div>
             <div class="col-md-4 mb-4">
               <label>Aadhaar Number</label>
-              <input type="text" name="aadhaar_number" class="form-control" value="{{ emp.aadhaar_number}}">
+              <input type="text" name="aadhaar_number" class="form-control" value="{{ emp.aadhaar_number|default_if_none:''}}">
             </div>
             <div class="col-md-4 mb-4">
               <label>UAN Number</label>
-              <input type="text" name="uan_number" class="form-control" value="{{ emp.uan_number}}" readonly>
+              <input type="text" name="uan_number" class="form-control" value="{{ emp.uan_number|default_if_none:''}}" >
             </div>
             <hr>
           <div class="col-md-6 mb-4">
   <label>Photo</label><br>
   {% if emp.photo %}
     <img src="{{ emp.photo.url }}" alt="Employee Photo" class="img-thumbnail mb-2" width="150">
+    <div class="form-check mt-2">
+      <input class="form-check-input" type="checkbox" name="remove_photo" id="remove_photo">
+      <label class="form-check-label" for="remove_photo">
+        Remove photo
+      </label>
+    </div>
   {% else %}
     <p>No photo uploaded</p>
   {% endif %}
@@ -197,177 +293,170 @@ My Account
           <div class="row mb-3">
             <div class="col-md-6">
               <label>Address Line 1</label>
-              <input type="text" name="present_address_line1" value="{{ emp.present_address_line1}}" class="form-control">
+              <input type="text" name="present_address_line1" value="{{ emp.present_address_line1|default_if_none:''}}" class="form-control">
             </div>
             <div class="col-md-6">
               <label>Address Line 2</label>
-              <input type="text" name="present_address_line2" value="{{ emp.present_address_line2}}" class="form-control">
+              <input type="text" name="present_address_line2" value="{{ emp.present_address_line2|default_if_none:''}}" class="form-control">
             </div>
             <div class="col-md-4">
               <label>City</label>
-              <input type="text" name="present_city"value="{{ emp.present_city}}" class="form-control">
+              <input type="text" name="present_city"value="{{ emp.present_city|default_if_none:''}}" class="form-control">
             </div>
             <div class="col-md-4">
               <label>Country</label>
-              <input type="text" name="present_country"value="{{ emp.present_country}}" class="form-control">
+              <input type="text" name="present_country"value="{{ emp.present_country|default_if_none:''}}" class="form-control">
             </div>
             <div class="col-md-4">
               <label>State</label>
-              <input type="text" name="present_state"value="{{ emp.present_state}}" class="form-control">
+              <input type="text" name="present_state"value="{{ emp.present_state|default_if_none:''}}" class="form-control">
             </div>
             <div class="col-md-4">
               <label>Postal Code</label>
-              <input type="text" name="present_postal_code"value="{{ emp.present_postal_code}}" class="form-control">
+              <input type="text" name="present_postal_code"value="{{ emp.present_postal_code|default_if_none:''}}" class="form-control">
             </div>
           </div>
 
           <!-- permanent address -->
           <h6 style="color: #131e40;" class="mt-4">Permanent Address</h6>
           <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" id="sameAsPresent" name="same_as_present">
-            <label class="form-check-label" for="sameAsPresent"value="{{ emp.same_as_present}}">Same as Present Address</label>
+            <input class="form-check-input" type="checkbox" id="sameAsPresent" name="permanent_same_as_present"
+            {% if emp.permanent_same_as_present %}checked{% endif %}>
+            <label class="form-check-label" for="sameAsPresent"value="{{ emp.permanent_same_as_present}}">Same as Present Address</label>
           </div>
           <div class="row mb-3">
             <div class="col-md-6">
               <label>Address Line 1</label>
-              <input type="text" name="permanent_address_line1" class="form-control" value="{{ emp.permanent_address_line1}}">
+              <input type="text" name="permanent_address_line1" class="form-control" value="{{ emp.permanent_address_line1|default_if_none:''}}">
             </div>
             <div class="col-md-6">
               <label>Address Line 2</label>
-              <input type="text" name="permanent_address_line2" class="form-control"value="{{ emp.permanent_address_line2}}">
+              <input type="text" name="permanent_address_line2" class="form-control"value="{{ emp.permanent_address_line2|default_if_none:''}}">
             </div>
             <div class="col-md-4">
               <label>City</label>
-              <input type="text" name="permanent_city" class="form-control"value="{{ emp.permanent_city}}">
+              <input type="text" name="permanent_city" class="form-control"value="{{ emp.permanent_city|default_if_none:''}}">
             </div>
             <div class="col-md-4">
               <label>Country</label>
-              <input type="text" name="permanent_country" class="form-control"value="{{ emp.permanent_country}}">
+              <input type="text" name="permanent_country" class="form-control"value="{{ emp.permanent_country|default_if_none:''}}">
             </div>
             <div class="col-md-4">
               <label>State</label>
-              <input type="text" name="permanent_state" class="form-control"value="{{ emp.permanent_state}}">
+              <input type="text" name="permanent_state" class="form-control"value="{{ emp.permanent_state|default_if_none:''}}">
             </div>
             <div class="col-md-4">
               <label>Postal Code</label>
-              <input type="text" name="permanent_postal_code" class="form-control"value="{{ emp.permanent_postal_code}}">
+              <input type="text" name="permanent_postal_code" class="form-control"value="{{ emp.permanent_postal_code|default_if_none:''}}">
             </div>
           </div>
 
-          <!-- Professional Details -->
+          <!-- ----------------------------------------------------------Professional Details -->
+           {% if request.user.is_staff %}
           <h6 style="color: #131e40;" class="mt-4">Professional Details</h6>
           <div class="row mb-3">
             <div class="col-md-4">
               <label>Experience (Years)</label>
-              <input type="text" name="experience" class="form-control" value="{{ emp.experience}}">
+              <input type="text" name="experience" class="form-control" value="{{ emp.experience|default_if_none:''}}"required>
             </div>
             <div class="col-md-4">
               <label>Source of Hire</label>
-              <input type="text" name="source_of_hire" class="form-control" value="{{ emp.source_of_hire}}">
+              <input type="text" name="source_of_hire" class="form-control" value="{{ emp.source_of_hire|default_if_none:''}}"required>
             </div>
             <div class="col-md-4">
               <label>Skill Set</label>
-              <input type="text" name="skill_set" class="form-control" value="{{ emp.skill_set}}">
+              <input type="text" name="skill_set" class="form-control" value="{{ emp.skill_set|default_if_none:''}}"required>
             </div>
             <div class="col-md-4">
               <label>Highest Qualification</label>
-              <input type="text" name="highest_qualification" class="form-control" value="{{ emp.highest_qualification}}">
+              <input type="text" name="highest_qualification" class="form-control" value="{{ emp.highest_qualification|default_if_none:''}}"required>
             </div>
             <div class="col-md-4">
               <label>Additional Info</label>
-              <input type="text" name="additional_information" class="form-control" value="{{ emp.additional_information}}">
+              <input type="text" name="additional_information" class="form-control" value="{{ emp.additional_information|default_if_none:''}}">
             </div>
             <div class="col-md-4">
               <label>Location</label>
-              <input type="text" name="location" class="form-control" value="{{ emp.location}}">
+              <input type="text" name="location" class="form-control" value="{{ emp.location|default_if_none:''}}"required>
             </div>
             <div class="col-md-4">
            <div class="mb-3">
-  <label class="form-label fw-semibold">Designation</label><br>
-
-  <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="title" id="ceo" value="CEO"
-           {% if emp.title == "CEO" %}checked{% endif %}>
-    <label class="form-check-label" for="ceo">CEO</label>
-  </div>
-
-  <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="title" id="admin" value="Administration"
-           {% if emp.title == "Administration" %}checked{% endif %}>
-    <label class="form-check-label" for="admin">Administration</label>
-  </div>
-
-  <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="title" id="manager" value="Manager"
-           {% if emp.title == "Manager" %}checked{% endif %}>
-    <label class="form-check-label" for="manager">Manager</label>
-  </div>
-
-  <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="title" id="assistant_manager" value="Assistant Manager"
-           {% if emp.title == "Assistant Manager" %}checked{% endif %}>
-    <label class="form-check-label" for="assistant_manager">Assistant Manager</label>
-  </div>
-
-  <div class="form-check form-check-inline">
-    <input class="form-check-input" type="radio" name="title" id="team_member" value="Team Member"
-           {% if emp.title == "Team Member" %}checked{% endif %}>
-    <label class="form-check-label" for="team_member">Team Member</label>
-  </div>
+  <label class="form-label">Designation</label>
+<select name="title" class="form-select">
+  {% for value, label in designations %}
+    <option value="{{ value }}"
+      {% if emp.title == value %}selected{% endif %}>
+      {{ label }}
+    </option>
+  {% endfor %}
+</select>
 </div>
-
-          </div>
+    </div>
 
           <!-- Salary & Department -->
           <h6 style="color: #131e40;" class="mt-4">Salary & Department</h6>
           <div class="row mb-3">
             <div class="col-md-4">
               <label>Current Salary</label>
-              <input type="text" name="current_salary" class="form-control" value="{{ emp.current_salary}}">
+              <input type="text" name="current_salary" class="form-control" value="{{ emp.current_salary|default_if_none:''}}"required>
             </div>
             <div class="col-md-4">
               <label>Department</label>
-              <input type="text" name="department" class="form-control" value="{{ emp.department}}">
+              <input type="text" name="department" class="form-control" value="{{ emp.department|default_if_none:''}}"required>
             </div>
             <div class="col-md-4">
               <label>Offer Letter</label>
-              <input type="file" name="offer_letter" class="form-control" value="{{ emp.offer_letter}}">
+              <input type="file" name="offer_letter" class="form-control" value="{{ emp.offer_letter|default_if_none:''}}"required>
             </div>
             <div class="col-md-4">
               <label>Tentative Joining Date</label>
-              <!-- <input type="date" name="tentative_joining_date" class="form-control" value="{{ emp.tentative_joining_date}}"> -->
-               <input type="date" name="tentative_joining_date" class="form-control" value="{{ emp.tentative_joining_date|date:'Y-m-d' }}">
+            
+               <input type="date" name="tentative_joining_date" class="form-control" value="{{ emp.tentative_joining_date|date:'Y-m-d' }}"required>
 
             </div>
-          </div>
+        </div>
+          
+          {% else %}
+            <!--  Hidden fields to preserve existing data -->
+
+  <input type="hidden" name="experience" value="{{ emp.experience }}">
+  <input type="hidden" name="source_of_hire" value="{{ emp.source_of_hire }}">
+  <input type="hidden" name="skill_set" value="{{ emp.skill_set }}">
+  <input type="hidden" name="highest_qualification" value="{{ emp.highest_qualification }}">
+  <input type="hidden" name="additional_information" value="{{ emp.additional_information }}">
+  <input type="hidden" name="location" value="{{ emp.location }}">
+  <input type="hidden" name="title" value="{{ emp.title }}">
+
+  <input type="hidden" name="current_salary" value="{{ emp.current_salary }}">
+  <input type="hidden" name="department" value="{{ emp.department_id }}">
+  <input type="hidden" name="tentative_joining_date"
+         value="{{ emp.tentative_joining_date|date:'Y-m-d' }}">
+
+{% endif %}
 
          <!--Education -------->
 <h6 style="color: #131e40;" class="mt-4">Education Details</h6>
 <div class="row mb-3">
   <div class="col-md-4">
     <label>College / University Name</label>
-    <input type="text" name="college_name" class="form-control" value="{{ emp.college_name }}">
+    <input type="text" name="college_name" class="form-control" value="{{ emp.college_name|default_if_none:'' }}">
   </div>
   <div class="col-md-4">
     <label>Degree</label>
-    <input type="text" name="degree" class="form-control" value="{{ emp.degree }}">
+    <input type="text" name="degree" class="form-control" value="{{ emp.degree|default_if_none:''}}">
   </div>
   <div class="col-md-4">
     <label>Field of Study</label>
-    <input type="text" name="field_of_study" class="form-control" value="{{ emp.field_of_study }}">
+    <input type="text" name="field_of_study" class="form-control" value="{{ emp.field_of_study|default_if_none:'' }}">
   </div>
   <div class="col-md-4">
     <label>Year of Completion</label>
-    <input type="text" name="year_of_completion" class="form-control" value="{{ emp.year_of_completion }}">
+    <input type="text" name="year_of_completion" class="form-control" value="{{ emp.year_of_completion|default_if_none:'' }}">
   </div>
 </div>
 
 </div>
- 
-
-  
-
-        <div class="modal-footer">
+ <div class="modal-footer">
           <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Close</button>
           <button type="submit" class="btn btn-success">Save Changes</button>
         </div>
@@ -378,5 +467,12 @@ My Account
 </div>
 {% endif %}
 </div>
+<script>
+  setTimeout(function () {
+    document.querySelectorAll('.alert').forEach(alert => {
+      new bootstrap.Alert(alert).close();
+    });
+  }, 3000);
+</script>
 {% endblock %}
 
